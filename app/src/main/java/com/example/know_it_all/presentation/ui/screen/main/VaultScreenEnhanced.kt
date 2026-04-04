@@ -5,29 +5,53 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.know_it_all.KnowItAllApplication
 import com.example.know_it_all.presentation.ui.components.TokenBalanceCard
+import com.example.know_it_all.presentation.viewmodel.LedgerViewModel
+import com.example.know_it_all.presentation.viewmodel.AuthViewModel
 
 @Composable
-fun VaultScreen(navController: NavHostController) {
-    val tokenBalance by remember { mutableStateOf(450L) }
+fun VaultScreenEnhanced(
+    navController: NavHostController,
+    ledgerViewModel: LedgerViewModel,
+    authViewModel: AuthViewModel
+) {
+    val context = LocalContext.current
+    val app = context.applicationContext as KnowItAllApplication
     
-    val ledgerEntries = listOf(
-        Triple("Swap with Alice", "5 stars", "2024-02-28"),
-        Triple("Token earned", "+50 tokens", "2024-02-25"),
-        Triple("Swap with Bob", "4 stars", "2024-02-20"),
-        Triple("Token spent", "-30 tokens", "2024-02-15")
-    )
+    val ledgerState by ledgerViewModel.uiState.collectAsState()
+    val authState by authViewModel.uiState.collectAsState()
+    
+    val userProfile = app.sessionManager.getUser()
+
+    LaunchedEffect(authState.token, authState.userId) {
+        if (authState.token != null && authState.userId != null) {
+            ledgerViewModel.loadLedger(authState.token!!, authState.userId!!)
+            // Initial token balance from session if available
+            userProfile?.let {
+                ledgerViewModel.updateTokenBalance(it.skillTokenBalance)
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -39,7 +63,30 @@ fun VaultScreen(navController: NavHostController) {
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            TokenBalanceCard(tokenBalance)
+            TokenBalanceCard(ledgerState.tokenBalance)
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = { 
+                    userProfile?.let { ledgerViewModel.generateSkillPassport(context, it) }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                enabled = !ledgerState.isLoading
+            ) {
+                Text("Generate Skill Passport (PDF)")
+            }
+
+            if (ledgerState.passportFile != null) {
+                Text(
+                    "Passport generated: ${ledgerState.passportFile?.name}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
 
             Text(
                 "Recent Transactions",
@@ -47,13 +94,29 @@ fun VaultScreen(navController: NavHostController) {
                 modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 8.dp)
             )
 
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp)
-            ) {
-                items(ledgerEntries) { (description, amount, date) ->
-                    LedgerEntryItem(description, amount, date)
+            if (ledgerState.isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else if (ledgerState.error != null) {
+                Text(
+                    ledgerState.error!!,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(16.dp)
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    items(ledgerState.ledgerEntries) { entry ->
+                        LedgerEntryItem(
+                            description = entry.transactionDescription,
+                            amount = if (entry.transactionType == "EARNED") "+${entry.tokenAmount}" else "-${entry.tokenAmount}",
+                            date = entry.createdAt.toString() // Placeholder format
+                        )
+                    }
                 }
             }
         }

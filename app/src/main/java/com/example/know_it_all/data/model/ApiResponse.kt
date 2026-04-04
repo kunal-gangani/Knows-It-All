@@ -9,5 +9,11 @@ data class ApiResponse<T>(
 
 data class AuthResponse(
     val token: String,
-    val user: Map<String, Any>
+    val userId: String,
+    val user: UserDTO? = null
+)
+
+data class AuthData(
+    val token: String,
+    val userId: String
 )

@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+.gsd/state/
+.gsd/backups/
+docs/plans/

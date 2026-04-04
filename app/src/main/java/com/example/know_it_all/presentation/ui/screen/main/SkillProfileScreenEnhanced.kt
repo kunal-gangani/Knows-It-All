@@ -1,152 +1,169 @@
 package com.example.know_it_all.presentation.ui.screen.main
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.know_it_all.KnowItAllApplication
+import com.example.know_it_all.presentation.ui.components.BottomNavigationBar
 import com.example.know_it_all.presentation.ui.components.SkillBadge
+import com.example.know_it_all.presentation.viewmodel.AuthViewModel
+import com.example.know_it_all.presentation.viewmodel.SkillViewModel
+import com.example.know_it_all.util.QRCodeGenerator
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SkillProfileScreen(navController: NavHostController) {
-    val skillsLearned = remember {
-        listOf("Python", "Web Development", "Data Science", "UI/UX Design")
+fun SkillProfileScreenEnhanced(
+    navController: NavHostController,
+    skillViewModel: SkillViewModel,
+    authViewModel: AuthViewModel
+) {
+    val context = LocalContext.current
+    val app = context.applicationContext as KnowItAllApplication
+
+    val skillState by skillViewModel.uiState.collectAsState()
+    val authState by authViewModel.uiState.collectAsState()
+
+    // ✅ FIXED: use SessionManager fields instead of getUser()
+    val userName = app.sessionManager.getUserName() ?: "User Profile"
+    val userEmail = app.sessionManager.getUserEmail() ?: ""
+
+    LaunchedEffect(authState.token, authState.userId) {
+        if (authState.token != null && authState.userId != null) {
+            skillViewModel.loadUserSkills(authState.token!!, authState.userId!!)
+        }
     }
-    
-    val skillsTaught = remember {
-        listOf("Java", "Android Development", "Mobile Apps")
+
+    val qrBitmap = remember(authState.userId) {
+        authState.userId?.let { QRCodeGenerator.generateQRCode("user|$it") }
     }
-    
-    var isGeneratingPDF by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Skill Passport") })
+            TopAppBar(title = { Text("Skill Profile") })
+        },
+        bottomBar = {
+            BottomNavigationBar(
+                navController = navController,
+                currentRoute = navController.currentBackStackEntry?.destination?.route
+            )
         }
     ) { innerPadding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Profile Header
-            androidx.compose.material3.Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text(
-                        "John Developer",
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-                    Text(
-                        "Member since Feb 2024",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        "⭐ 4.8 / 5.0 Trust Score",
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                }
-            }
-
-            // Skills Learned
-            Text(
-                "Skills Learned (${skillsLearned.size})",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-            
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                skillsLearned.onEach { skill ->
-                    SkillBadge(skill)
-                }
-            }
-
-            // Skills Taught
-            Text(
-                "Skills Taught (${skillsTaught.size})",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-            
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                skillsTaught.onEach { skill ->
-                    SkillBadge(skill)
-                }
-            }
-
-            // Action Buttons
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Button(
-                    onClick = { isGeneratingPDF = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    if (isGeneratingPDF) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.height(20.dp)
-                            )
-                            Text("Generating PDF...")
-                        }
-                    } else {
-                        Icon(Icons.Default.Download, contentDescription = "Download")
-                        Text("Download Skill Passport")
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            userName,
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+                        Text(
+                            userEmail,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            "Member since 2024",
+                            style = MaterialTheme.typography.bodySmall
+                        )
                     }
                 }
+            }
 
-                Button(
-                    onClick = { /* TODO: Implement video call */ },
+            item {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        "Your Verification QR",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                    qrBitmap?.let { bitmap ->
+                        Card(
+                            modifier = Modifier.size(200.dp),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    bitmap = bitmap.asImageBitmap(),
+                                    contentDescription = "Verification QR Code",
+                                    modifier = Modifier.size(180.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                Text(
+                    "Verified Skills (${skillState.userSkills.size})",
+                    style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.Phone, contentDescription = "Video Call")
-                    Text("Schedule Video Session")
+                )
+            }
+
+            if (skillState.isLoading) {
+                item { CircularProgressIndicator() }
+            } else if (skillState.userSkills.isEmpty()) {
+                item {
+                    Text(
+                        "No skills added yet",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+            } else {
+                items(skillState.userSkills) { skill ->
+                    SkillBadge(
+                        skillName = "${skill.skillName} · ${skill.proficiencyLevel.name}",
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
         }

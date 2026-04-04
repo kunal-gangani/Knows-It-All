@@ -1,6 +1,10 @@
 package com.example.know_it_all.data.remote
 
 import com.example.know_it_all.BuildConfig
+import com.example.know_it_all.data.remote.api.LedgerService
+import com.example.know_it_all.data.remote.api.SkillService
+import com.example.know_it_all.data.remote.api.SwapService
+import com.example.know_it_all.data.remote.api.UserService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -8,7 +12,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
-    private const val BASE_URL = "http://10.0.2.2:8080/api/v1/" // For local development
+    private const val BASE_URL = "http://10.0.2.2:8080/api/v1/" 
     // Change to "https://your-backend-domain.com/api/v1/" for production
 
     private val httpClient: OkHttpClient
@@ -40,9 +44,3 @@ object RetrofitClient {
     fun createSwapService(): SwapService = retrofit.create(SwapService::class.java)
     fun createLedgerService(): LedgerService = retrofit.create(LedgerService::class.java)
 }
-
-// Import statements for the services
-import com.example.know_it_all.data.remote.api.UserService
-import com.example.know_it_all.data.remote.api.SkillService
-import com.example.know_it_all.data.remote.api.SwapService
-import com.example.know_it_all.data.remote.api.LedgerService

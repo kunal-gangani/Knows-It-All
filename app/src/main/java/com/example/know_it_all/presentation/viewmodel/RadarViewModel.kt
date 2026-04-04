@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.know_it_all.data.model.dto.UserDTO
 import com.example.know_it_all.data.repository.UserRepository
+import com.example.know_it_all.util.LocationService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -12,42 +13,61 @@ data class RadarUiState(
     val isLoading: Boolean = false,
     val nearbyUsers: List<UserDTO> = emptyList(),
     val error: String? = null,
-    val userLocation: Pair<Double, Double>? = null,
+    val currentLat: Double? = null,  
+    val currentLon: Double? = null,
     val radiusKm: Double = 5.0
 )
 
-class RadarViewModel(private val userRepository: UserRepository) : ViewModel() {
+class RadarViewModel(
+    private val userRepository: UserRepository,
+    private val locationService: LocationService
+) : ViewModel() {
+
     private val _uiState = MutableStateFlow(RadarUiState())
     val uiState: StateFlow<RadarUiState> = _uiState
 
-    fun loadNearbyUsers(token: String, latitude: Double, longitude: Double, radiusKm: Double = 5.0) {
+    fun loadNearbyUsers(token: String, radiusKm: Double = 5.0) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            val result = userRepository.getNearbyUsers(token, latitude, longitude, radiusKm)
-            result.onSuccess { users ->
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    nearbyUsers = users,
-                    userLocation = Pair(latitude, longitude),
-                    radiusKm = radiusKm,
-                    error = null
+
+            val location = locationService.getCurrentLocation()
+                ?: locationService.getLastLocation()
+
+            if (location != null) {
+                val latitude = location.latitude
+                val longitude = location.longitude
+
+                // ✅ fold instead of separate onSuccess/onFailure
+                userRepository.getNearbyUsers(token, latitude, longitude, radiusKm).fold(
+                    onSuccess = { users ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            nearbyUsers = users,
+                            currentLat = latitude,
+                            currentLon = longitude,
+                            radiusKm = radiusKm,
+                            error = null
+                        )
+                    },
+                    onFailure = { error ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            error = error.message ?: "Failed to load nearby users"
+                        )
+                    }
                 )
-            }
-            result.onFailure { error ->
+            } else {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = error.message
+                    error = "Could not fetch current location"
                 )
             }
         }
     }
 
-    fun updateRadius(newRadius: Double) {
+    fun updateRadius(token: String, newRadius: Double) {
         _uiState.value = _uiState.value.copy(radiusKm = newRadius)
-        // Reload data with new radius if we have location
-        _uiState.value.userLocation?.let {
-            loadNearbyUsers("", it.first, it.second, newRadius)
-        }
+        loadNearbyUsers(token, newRadius)
     }
 
     fun clearError() {

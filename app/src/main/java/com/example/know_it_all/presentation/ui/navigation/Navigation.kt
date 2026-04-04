@@ -1,17 +1,29 @@
 package com.example.know_it_all.presentation.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.know_it_all.KnowItAllApplication
 import com.example.know_it_all.presentation.ui.screen.auth.LoginScreen
 import com.example.know_it_all.presentation.ui.screen.auth.RegisterScreen
-import com.example.know_it_all.presentation.ui.screen.main.RadarScreen
-import com.example.know_it_all.presentation.ui.screen.main.TradeScreen
-import com.example.know_it_all.presentation.ui.screen.main.VaultScreen
-import com.example.know_it_all.presentation.ui.screen.main.SkillProfileScreen
+import com.example.know_it_all.presentation.ui.screen.main.RadarScreenEnhanced
+import com.example.know_it_all.presentation.ui.screen.main.TradeScreenEnhanced
+import com.example.know_it_all.presentation.ui.screen.main.VaultScreenEnhanced
+import com.example.know_it_all.presentation.ui.screen.main.SkillProfileScreenEnhanced
+import com.example.know_it_all.presentation.viewmodel.AuthViewModel
+import com.example.know_it_all.presentation.viewmodel.RadarViewModel
+import com.example.know_it_all.presentation.viewmodel.TradeViewModel
+import com.example.know_it_all.presentation.viewmodel.LedgerViewModel
+import com.example.know_it_all.presentation.viewmodel.SkillViewModel
+import com.example.know_it_all.presentation.viewmodel.ViewModelFactory
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
@@ -28,28 +40,67 @@ fun KnowItAllNavigation(
     navController: NavHostController = rememberNavController(),
     startDestination: String = Screen.Login.route
 ) {
+    val context = LocalContext.current
+    val app = context.applicationContext as KnowItAllApplication
+    
+    val authViewModel: AuthViewModel = viewModel(
+        factory = ViewModelFactory(
+            userRepository = app.userRepository,
+            sessionManager = app.sessionManager
+        )
+    )
+    
+    val radarViewModel: RadarViewModel = viewModel(
+        factory = ViewModelFactory(
+            userRepository = app.userRepository,
+            locationService = app.locationService
+        )
+    )
+    
+    val tradeViewModel: TradeViewModel = viewModel(
+        factory = ViewModelFactory(
+            userRepository = app.userRepository,
+            swapRepository = app.swapRepository
+        )
+    )
+    
+    val ledgerViewModel: LedgerViewModel = viewModel(
+        factory = ViewModelFactory(
+            userRepository = app.userRepository,
+            ledgerRepository = app.ledgerRepository,
+            skillRepository = app.skillRepository
+        )
+    )
+    
+    val skillViewModel: SkillViewModel = viewModel(
+        factory = ViewModelFactory(
+            userRepository = app.userRepository,
+            skillRepository = app.skillRepository
+        )
+    )
+    
     NavHost(
         navController = navController,
-        startDestination = startDestination,
+        startDestination = if (app.sessionManager.isLoggedIn()) Screen.Radar.route else startDestination,
         modifier = modifier
     ) {
         composable(Screen.Login.route) {
-            LoginScreen(navController)
+            LoginScreen(navController, authViewModel)
         }
         composable(Screen.Register.route) {
-            RegisterScreen(navController)
+            RegisterScreen(navController, authViewModel)
         }
         composable(Screen.Radar.route) {
-            RadarScreen(navController)
+            RadarScreenEnhanced(navController, radarViewModel, authViewModel)
         }
         composable(Screen.Trade.route) {
-            TradeScreen(navController)
+            TradeScreenEnhanced(navController, tradeViewModel, authViewModel)
         }
         composable(Screen.Vault.route) {
-            VaultScreen(navController)
+            VaultScreenEnhanced(navController, ledgerViewModel, authViewModel)
         }
         composable(Screen.SkillProfile.route) {
-            SkillProfileScreen(navController)
+            SkillProfileScreenEnhanced(navController, skillViewModel, authViewModel)
         }
     }
 }

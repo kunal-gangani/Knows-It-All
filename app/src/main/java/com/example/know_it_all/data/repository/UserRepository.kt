@@ -1,6 +1,7 @@
 package com.example.know_it_all.data.repository
 
 import com.example.know_it_all.data.local.db.KnowItAllDatabase
+import com.example.know_it_all.data.model.AuthData
 import com.example.know_it_all.data.model.User
 import com.example.know_it_all.data.model.dto.UserDTO
 import com.example.know_it_all.data.model.dto.UserLoginRequest
@@ -12,13 +13,16 @@ class UserRepository(private val database: KnowItAllDatabase) {
     private val userService = RetrofitClient.createUserService()
     private val userDao = database.userDao()
 
-    suspend fun register(name: String, email: String, password: String): Result<String> {
+    suspend fun register(name: String, email: String, password: String): Result<AuthData> {
         return try {
             val response = userService.register(
                 UserRegisterRequest(name, email, password)
             )
-            if (response.success) {
-                Result.success(response.data?.token ?: "")
+            if (response.success && response.data != null) {
+                Result.success(AuthData(
+                    token = response.data.token,
+                    userId = response.data.userId
+                ))
             } else {
                 Result.failure(Exception(response.error ?: "Registration failed"))
             }
@@ -27,13 +31,16 @@ class UserRepository(private val database: KnowItAllDatabase) {
         }
     }
 
-    suspend fun login(email: String, password: String): Result<String> {
+    suspend fun login(email: String, password: String): Result<AuthData> {
         return try {
             val response = userService.login(
                 UserLoginRequest(email, password)
             )
-            if (response.success) {
-                Result.success(response.data?.token ?: "")
+            if (response.success && response.data != null) {
+                Result.success(AuthData(
+                    token = response.data.token,
+                    userId = response.data.userId
+                ))
             } else {
                 Result.failure(Exception(response.error ?: "Login failed"))
             }
