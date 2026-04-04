@@ -1,5 +1,6 @@
 package com.example.know_it_all.data.model
 
+import com.example.know_it_all.data.model.dto.UserDTO
 data class ApiResponse<T>(
     val success: Boolean,
     val message: String,

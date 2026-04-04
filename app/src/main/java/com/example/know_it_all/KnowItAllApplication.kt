@@ -8,7 +8,6 @@ import com.example.know_it_all.data.repository.SwapRepository
 import com.example.know_it_all.data.repository.LedgerRepository
 import com.example.know_it_all.data.repository.SkillRepository
 import com.example.know_it_all.util.SessionManager
-import com.example.know_it_all.util.LocationService
 
 class KnowItAllApplication : Application() {
     val database by lazy {
@@ -20,7 +19,6 @@ class KnowItAllApplication : Application() {
     }
 
     val sessionManager by lazy { SessionManager(this) }
-    val locationService by lazy { LocationService(this) }
 
     val userRepository by lazy { UserRepository(database) }
     val swapRepository by lazy { SwapRepository(database) }

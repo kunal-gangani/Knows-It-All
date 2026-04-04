@@ -36,7 +36,6 @@ import com.example.know_it_all.presentation.ui.components.BottomNavigationBar
 import com.example.know_it_all.presentation.ui.components.SkillBadge
 import com.example.know_it_all.presentation.viewmodel.AuthViewModel
 import com.example.know_it_all.presentation.viewmodel.SkillViewModel
-import com.example.know_it_all.util.QRCodeGenerator
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,10 +58,6 @@ fun SkillProfileScreenEnhanced(
         if (authState.token != null && authState.userId != null) {
             skillViewModel.loadUserSkills(authState.token!!, authState.userId!!)
         }
-    }
-
-    val qrBitmap = remember(authState.userId) {
-        authState.userId?.let { QRCodeGenerator.generateQRCode("user|$it") }
     }
 
     Scaffold(
@@ -116,27 +111,11 @@ fun SkillProfileScreenEnhanced(
             item {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        "Your Verification QR",
+                        "Your Skill Profile",
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
-                    qrBitmap?.let { bitmap ->
-                        Card(
-                            modifier = Modifier.size(200.dp),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Image(
-                                    bitmap = bitmap.asImageBitmap(),
-                                    contentDescription = "Verification QR Code",
-                                    modifier = Modifier.size(180.dp)
-                                )
-                            }
-                        }
-                    }
+                    // TODO: Add QR code generation when library is available
                 }
             }
 

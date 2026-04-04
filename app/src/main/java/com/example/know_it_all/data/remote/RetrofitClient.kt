@@ -1,6 +1,5 @@
 package com.example.know_it_all.data.remote
 
-import com.example.know_it_all.BuildConfig
 import com.example.know_it_all.data.remote.api.LedgerService
 import com.example.know_it_all.data.remote.api.SkillService
 import com.example.know_it_all.data.remote.api.SwapService
@@ -22,12 +21,11 @@ object RetrofitClient {
                 .readTimeout(30, TimeUnit.SECONDS)
                 .writeTimeout(30, TimeUnit.SECONDS)
 
-            if (BuildConfig.DEBUG) {
-                val loggingInterceptor = HttpLoggingInterceptor().apply {
-                    level = HttpLoggingInterceptor.Level.BODY
-                }
-                clientBuilder.addInterceptor(loggingInterceptor)
+            // Enable logging in all builds (remove BuildConfig dependency)
+            val loggingInterceptor = HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
             }
+            clientBuilder.addInterceptor(loggingInterceptor)
 
             return clientBuilder.build()
         }

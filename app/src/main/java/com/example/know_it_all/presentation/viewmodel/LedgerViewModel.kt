@@ -35,14 +35,12 @@ class LedgerViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
-            // Listen to local cache continuously
             launch {
                 ledgerRepository.getUserLedgerLocal(userId).collectLatest { entries ->
                     _uiState.value = _uiState.value.copy(ledgerEntries = entries)
                 }
             }
 
-            // ✅ FIXED: fold instead of isSuccess check
             ledgerRepository.getUserLedgerRemote(token, userId).fold(
                 onSuccess = {
                     ledgerRepository.getTrustScore(token, userId).fold(
@@ -72,7 +70,6 @@ class LedgerViewModel(
         }
     }
 
-    // ✅ FIXED: takes individual fields instead of User object
     fun generateSkillPassport(
         context: Context,
         userId: String,
@@ -81,20 +78,16 @@ class LedgerViewModel(
     ) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-
             try {
-                // ✅ FIXED: first() instead of collectLatest — get one emission and stop
-                val skills = skillRepository.getSkillsByUser(userId).first()
-
-                val skillInfos = skills.map {
+                val skills = skillRepository.getUserSkillsLocal(userId).first()
+                val skillInfos = skills.map { skill ->
                     SkillPassportGenerator.SkillInfo(
-                        name = it.skillName,
-                        category = it.category,
-                        proficiency = it.proficiencyLevel.name,
+                        name = skill.skillName,
+                        category = skill.category.name,
+                        proficiency = skill.proficiencyLevel.name,
                         year = 2024
                     )
                 }
-
                 val file = SkillPassportGenerator.generatePDF(
                     context = context,
                     userName = userName,
@@ -103,23 +96,13 @@ class LedgerViewModel(
                     skills = skillInfos,
                     trustScore = _uiState.value.trustScore
                 )
-
                 if (file != null) {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        passportFile = file
-                    )
+                    _uiState.value = _uiState.value.copy(isLoading = false, passportFile = file)
                 } else {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = "Failed to generate PDF"
-                    )
+                    _uiState.value = _uiState.value.copy(isLoading = false, error = "Failed to generate PDF")
                 }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    error = e.message ?: "Failed to generate passport"
-                )
+                _uiState.value = _uiState.value.copy(isLoading = false, error = e.message ?: "Failed to generate passport")
             }
         }
     }

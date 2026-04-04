@@ -7,6 +7,8 @@ data class SwapDTO(
     val swapId: String,
     val mentorId: String,
     val learnerId: String,
+    val mentorName: String = "",   
+    val skillName: String = "",    
     val mentorSkillId: Int,
     val learnerSkillId: Int?,
     val swapType: SwapType,

@@ -117,7 +117,7 @@ fun TradeScreenEnhanced(
                             SwapItem(
                                 mentor = swap.mentorName,
                                 skill = swap.skillName,
-                                status = swap.status
+                                status = swap.status.name  
                             )
                         }
                     }

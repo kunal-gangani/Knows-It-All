@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.know_it_all.presentation.ui.components.BottomNavigationBar
 import com.example.know_it_all.presentation.ui.components.UserCard
 import com.example.know_it_all.presentation.viewmodel.AuthViewModel
 import com.example.know_it_all.presentation.viewmodel.RadarViewModel

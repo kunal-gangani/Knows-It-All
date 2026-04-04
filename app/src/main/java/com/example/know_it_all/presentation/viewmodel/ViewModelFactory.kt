@@ -7,15 +7,13 @@ import com.example.know_it_all.data.repository.SwapRepository
 import com.example.know_it_all.data.repository.LedgerRepository
 import com.example.know_it_all.data.repository.SkillRepository
 import com.example.know_it_all.util.SessionManager
-import com.example.know_it_all.util.LocationService
 
 class ViewModelFactory(
     private val userRepository: UserRepository,
     private val swapRepository: SwapRepository? = null,
     private val ledgerRepository: LedgerRepository? = null,
     private val skillRepository: SkillRepository? = null,
-    private val sessionManager: SessionManager? = null,
-    private val locationService: LocationService? = null
+    private val sessionManager: SessionManager? = null
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -25,7 +23,7 @@ class ViewModelFactory(
                 AuthViewModel(userRepository, sessionManager!!) as T
             }
             modelClass.isAssignableFrom(RadarViewModel::class.java) -> {
-                RadarViewModel(userRepository, locationService!!) as T
+                RadarViewModel(userRepository) as T
             }
             modelClass.isAssignableFrom(TradeViewModel::class.java) -> {
                 TradeViewModel(swapRepository!!) as T

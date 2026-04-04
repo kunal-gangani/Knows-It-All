@@ -1,4 +1,5 @@
-package com.example.know_it_all.util
+// DISABLED - Missing dependencies
+// package com.example.know_it_all.util
 
 import android.annotation.SuppressLint
 import android.content.Context

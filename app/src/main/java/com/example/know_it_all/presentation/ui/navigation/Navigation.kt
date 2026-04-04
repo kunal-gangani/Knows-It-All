@@ -52,8 +52,7 @@ fun KnowItAllNavigation(
     
     val radarViewModel: RadarViewModel = viewModel(
         factory = ViewModelFactory(
-            userRepository = app.userRepository,
-            locationService = app.locationService
+            userRepository = app.userRepository
         )
     )
     

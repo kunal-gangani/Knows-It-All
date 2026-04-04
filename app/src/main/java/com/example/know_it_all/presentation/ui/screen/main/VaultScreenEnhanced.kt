@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -29,6 +30,7 @@ import com.example.know_it_all.presentation.ui.components.TokenBalanceCard
 import com.example.know_it_all.presentation.viewmodel.LedgerViewModel
 import com.example.know_it_all.presentation.viewmodel.AuthViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VaultScreenEnhanced(
     navController: NavHostController,
@@ -40,16 +42,12 @@ fun VaultScreenEnhanced(
     
     val ledgerState by ledgerViewModel.uiState.collectAsState()
     val authState by authViewModel.uiState.collectAsState()
-    
-    val userProfile = app.sessionManager.getUser()
+    val userId = app.sessionManager.getUserId()
+    val userEmail = app.sessionManager.getUserEmail()
 
     LaunchedEffect(authState.token, authState.userId) {
         if (authState.token != null && authState.userId != null) {
             ledgerViewModel.loadLedger(authState.token!!, authState.userId!!)
-            // Initial token balance from session if available
-            userProfile?.let {
-                ledgerViewModel.updateTokenBalance(it.skillTokenBalance)
-            }
         }
     }
 
@@ -69,7 +67,8 @@ fun VaultScreenEnhanced(
 
             Button(
                 onClick = { 
-                    userProfile?.let { ledgerViewModel.generateSkillPassport(context, it) }
+                    // TODO: Implement passport generation
+                    // ledgerViewModel.generateSkillPassport(context, userProfile)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -112,9 +111,9 @@ fun VaultScreenEnhanced(
                 ) {
                     items(ledgerState.ledgerEntries) { entry ->
                         LedgerEntryItem(
-                            description = entry.transactionDescription,
-                            amount = if (entry.transactionType == "EARNED") "+${entry.tokenAmount}" else "-${entry.tokenAmount}",
-                            date = entry.createdAt.toString() // Placeholder format
+                            description = entry.transactionData,        
+                            amount = "${entry.ratingGiven}★",          
+                            date = entry.createdAt.toString()
                         )
                     }
                 }
