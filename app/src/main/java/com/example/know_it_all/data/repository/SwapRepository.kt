@@ -94,16 +94,7 @@ class SwapRepository(private val database: KnowItAllDatabase) {
     }
 
     suspend fun getActiveSwapsRemote(token: String): Result<List<SwapDTO>> {
-        return try {
-            val response = swapService.getActiveSwaps("Bearer $token")
-            if (response.success && response.data != null) {
-                Result.success(response.data)
-            } else {
-                Result.failure(Exception(response.error ?: "Failed to fetch active swaps"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        return Result.success(MockDataSource.getActiveSwaps())
     }
 
     suspend fun getSwapHistory(
@@ -111,15 +102,6 @@ class SwapRepository(private val database: KnowItAllDatabase) {
         limit: Int = 10,
         offset: Int = 0
     ): Result<List<SwapDTO>> {
-        return try {
-            val response = swapService.getSwapHistory("Bearer $token", limit, offset)
-            if (response.success && response.data != null) {
-                Result.success(response.data)
-            } else {
-                Result.failure(Exception(response.error ?: "Failed to fetch swap history"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        return Result.success(MockDataSource.getSwapHistory())
     }
 }
