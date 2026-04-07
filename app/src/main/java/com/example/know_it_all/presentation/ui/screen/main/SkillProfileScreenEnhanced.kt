@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,13 +19,17 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
@@ -53,6 +58,10 @@ fun SkillProfileScreenEnhanced(
     // ✅ FIXED: use SessionManager fields instead of getUser()
     val userName = app.sessionManager.getUserName() ?: "User Profile"
     val userEmail = app.sessionManager.getUserEmail() ?: ""
+    
+    var locationPermissionEnabled by remember { 
+        mutableStateOf(app.sessionManager.isLocationPermissionEnabled()) 
+    }
 
     LaunchedEffect(authState.token, authState.userId) {
         if (authState.token != null && authState.userId != null) {
@@ -62,7 +71,18 @@ fun SkillProfileScreenEnhanced(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Skill Profile") })
+            TopAppBar(
+                title = { 
+                    Text(
+                        "SKILL PROFILE",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                    ) 
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            )
         },
         bottomBar = {
             BottomNavigationBar(
@@ -116,6 +136,57 @@ fun SkillProfileScreenEnhanced(
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
                     // TODO: Add QR code generation when library is available
+                }
+            }
+
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            "Settings",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+                        
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    "Location Services",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                                )
+                                Text(
+                                    "Allow app to access location services",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            
+                            Switch(
+                                checked = locationPermissionEnabled,
+                                onCheckedChange = { newValue ->
+                                    locationPermissionEnabled = newValue
+                                    app.sessionManager.setLocationPermissionEnabled(newValue)
+                                }
+                            )
+                        }
+                    }
                 }
             }
 

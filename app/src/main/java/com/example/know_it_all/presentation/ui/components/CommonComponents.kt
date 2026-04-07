@@ -1,9 +1,9 @@
 package com.example.know_it_all.presentation.ui.components
 
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInUp
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,7 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.ripple
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.know_it_all.presentation.ui.navigation.BottomNavItem
 import com.example.know_it_all.presentation.ui.navigation.Screen
@@ -51,23 +52,23 @@ fun BottomNavigationBar(
     NavigationBar(
         modifier = Modifier
             .height(80.dp)
-            .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
+            .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
         containerColor = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface,
-        tonalElevation = 8.dp
+        tonalElevation = 12.dp
     ) {
         BottomNavItem.items().forEach { item ->
             NavigationBarItem(
                 icon = { 
                     Box(
                         modifier = Modifier
-                            .size(28.dp)
+                            .size(40.dp)
                             .background(
                                 color = if (currentRoute == item.route) 
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                                 else 
                                     MaterialTheme.colorScheme.surface,
-                                shape = RoundedCornerShape(8.dp)
+                                shape = RoundedCornerShape(12.dp)
                             ),
                         contentAlignment = Alignment.Center
                     ) {
@@ -125,19 +126,19 @@ fun UserCard(
             .padding(12.dp)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(bounded = true),
+                indication = ripple(bounded = true),
                 onClick = onClick
             ),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp,
-            pressedElevation = 8.dp,
-            hoveredElevation = 4.dp
+            defaultElevation = 4.dp,
+            pressedElevation = 10.dp,
+            hoveredElevation = 6.dp
         ),
-        border = CardDefaults.outlinedCardBorder(),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Row(
             modifier = Modifier
@@ -153,25 +154,28 @@ fun UserCard(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .background(
-                            MaterialTheme.colorScheme.primaryContainer,
-                            RoundedCornerShape(6.dp)
+                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
+                            RoundedCornerShape(8.dp)
                         )
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
                     Text(
-                        text = "📍",
-                        modifier = Modifier.padding(end = 4.dp)
+                        text = "Location:",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Medium
                     )
+                    Spacer(modifier = Modifier.size(4.dp))
                     Text(
                         text = distance,
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        fontWeight = FontWeight.Medium
+                        color = MaterialTheme.colorScheme.secondary,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
@@ -205,27 +209,19 @@ fun SkillBadge(skillName: String, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .background(
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                shape = RoundedCornerShape(10.dp)
+                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f),
+                shape = RoundedCornerShape(12.dp)
             )
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .clip(RoundedCornerShape(12.dp))
+            .padding(horizontal = 14.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "✨",
-                modifier = Modifier.padding(end = 4.dp)
-            )
-            Text(
-                text = skillName,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
+        Text(
+            text = skillName,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.secondary,
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }
 
@@ -236,42 +232,57 @@ fun TokenBalanceCard(balance: Long, modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .height(140.dp),
-        shape = RoundedCornerShape(20.dp),
+            .height(160.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primary
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 8.dp,
-            pressedElevation = 12.dp
+            pressedElevation = 12.dp,
+            hoveredElevation = 10.dp
         )
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .background(
+                    brush = androidx.compose.ui.graphics.Brush.linearGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.6f)
+                        )
+                    )
+                )
         ) {
-            Text(
-                text = "💎 SKILL TOKENS",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
-                fontWeight = FontWeight.SemiBold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = balance.toString(),
-                style = MaterialTheme.typography.displaySmall,
-                color = MaterialTheme.colorScheme.onPrimary,
-                fontWeight = FontWeight.ExtraBold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Available for trading",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(28.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "SKILL TOKENS",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 1.5.sp
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = balance.toString(),
+                    style = MaterialTheme.typography.displaySmall,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    fontWeight = FontWeight.ExtraBold
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = "Available for trading",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                )
+            }
         }
     }
 }
@@ -279,50 +290,39 @@ fun TokenBalanceCard(balance: Long, modifier: Modifier = Modifier) {
 // ===== MODERN STATUS BADGE WITH ANIMATIONS =====
 @Composable
 fun SwapStatusBadge(status: String, modifier: Modifier = Modifier) {
-    val (backgroundColor, textColor, icon) = when (status.uppercase()) {
-        "ACTIVE" -> Triple(
+    val (backgroundColor, textColor) = when (status.uppercase()) {
+        "ACTIVE" -> Pair(
             MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f),
-            MaterialTheme.colorScheme.secondary,
-            "🔄"
+            MaterialTheme.colorScheme.secondary
         )
-        "COMPLETED" -> Triple(
+        "COMPLETED" -> Pair(
             MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f),
-            MaterialTheme.colorScheme.tertiary,
-            "✓"
+            MaterialTheme.colorScheme.tertiary
         )
-        "REQUESTED" -> Triple(
+        "REQUESTED" -> Pair(
             MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-            MaterialTheme.colorScheme.primary,
-            "⏳"
+            MaterialTheme.colorScheme.primary
         )
-        else -> Triple(
+        else -> Pair(
             MaterialTheme.colorScheme.error.copy(alpha = 0.2f),
-            MaterialTheme.colorScheme.error,
-            "⚠"
+            MaterialTheme.colorScheme.error
         )
     }
 
     Box(
         modifier = modifier
-            .background(backgroundColor, RoundedCornerShape(10.dp))
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .background(backgroundColor, RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(12.dp))
+            .padding(horizontal = 14.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = icon,
-                modifier = Modifier.padding(end = 4.dp)
-            )
-            Text(
-                text = status,
-                style = MaterialTheme.typography.labelMedium,
-                color = textColor,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
+        Text(
+            text = status,
+            style = MaterialTheme.typography.labelMedium,
+            color = textColor,
+            fontWeight = FontWeight.SemiBold,
+            letterSpacing = 0.5.sp
+        )
     }
 }
 
@@ -337,7 +337,7 @@ fun GradientHeader(
         modifier = modifier
             .fillMaxWidth()
             .background(
-                brush = androidx.compose.foundation.background.Brush.verticalGradient(
+                brush = androidx.compose.ui.graphics.Brush.verticalGradient(
                     colors = listOf(
                         MaterialTheme.colorScheme.primary,
                         MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
@@ -426,6 +426,34 @@ fun SecondaryButton(
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.primary
+        )
+    }
+}
+
+// ===== COLORFUL SECTION HEADER =====
+@Composable
+fun ColoredSectionHeader(
+    title: String,
+    color: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.secondary,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(4.dp)
+                .background(color, RoundedCornerShape(2.dp))
+        )
+        Spacer(modifier = Modifier.size(12.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = color
         )
     }
 }

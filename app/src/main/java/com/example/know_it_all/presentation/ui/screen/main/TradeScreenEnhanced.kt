@@ -17,6 +17,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -58,7 +59,18 @@ fun TradeScreenEnhanced(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Trade Center") })
+            TopAppBar(
+                title = { 
+                    Text(
+                        "TRADE CENTER",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                    ) 
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                )
+            )
         },
         bottomBar = {
             BottomNavigationBar(

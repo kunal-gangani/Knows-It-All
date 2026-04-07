@@ -14,6 +14,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.know_it_all.KnowItAllApplication
 import com.example.know_it_all.presentation.ui.screen.auth.LoginScreen
 import com.example.know_it_all.presentation.ui.screen.auth.RegisterScreen
+import com.example.know_it_all.presentation.ui.screen.auth.SplashScreen
 import com.example.know_it_all.presentation.ui.screen.main.RadarScreenEnhanced
 import com.example.know_it_all.presentation.ui.screen.main.TradeScreenEnhanced
 import com.example.know_it_all.presentation.ui.screen.main.VaultScreenEnhanced
@@ -26,6 +27,7 @@ import com.example.know_it_all.presentation.viewmodel.SkillViewModel
 import com.example.know_it_all.presentation.viewmodel.ViewModelFactory
 
 sealed class Screen(val route: String) {
+    object Splash : Screen("splash")
     object Login : Screen("login")
     object Register : Screen("register")
     object Radar : Screen("radar")
@@ -38,7 +40,7 @@ sealed class Screen(val route: String) {
 fun KnowItAllNavigation(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    startDestination: String = Screen.Login.route
+    startDestination: String = Screen.Splash.route
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as KnowItAllApplication
@@ -80,9 +82,15 @@ fun KnowItAllNavigation(
     
     NavHost(
         navController = navController,
-        startDestination = if (app.sessionManager.isLoggedIn()) Screen.Radar.route else startDestination,
+        startDestination = startDestination,
         modifier = modifier
     ) {
+        composable(Screen.Splash.route) {
+            SplashScreen(
+                navController = navController,
+                isLoggedIn = app.sessionManager.isLoggedIn()
+            )
+        }
         composable(Screen.Login.route) {
             LoginScreen(navController, authViewModel)
         }

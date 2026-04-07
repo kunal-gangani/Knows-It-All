@@ -1,6 +1,7 @@
 package com.example.know_it_all.presentation.ui.screen.auth
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.know_it_all.presentation.ui.components.ModernButton
 import com.example.know_it_all.presentation.ui.navigation.Screen
@@ -93,9 +95,9 @@ fun LoginScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    brush = androidx.compose.foundation.background.Brush.verticalGradient(
+                    brush = androidx.compose.ui.graphics.Brush.verticalGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
                             MaterialTheme.colorScheme.background
                         )
                     )
@@ -103,11 +105,22 @@ fun LoginScreen(
                 .padding(vertical = 48.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                "🎓",
-                style = MaterialTheme.typography.displayLarge,
-                modifier = Modifier.size(64.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .size(72.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                        shape = RoundedCornerShape(20.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "K",
+                    style = MaterialTheme.typography.displayMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.ExtraBold
+                )
+            }
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 "KnowItAll",

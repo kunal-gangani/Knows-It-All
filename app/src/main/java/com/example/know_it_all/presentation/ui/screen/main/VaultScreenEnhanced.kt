@@ -16,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -26,6 +27,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.know_it_all.KnowItAllApplication
+import com.example.know_it_all.presentation.ui.components.ColoredSectionHeader
 import com.example.know_it_all.presentation.ui.components.TokenBalanceCard
 import com.example.know_it_all.presentation.viewmodel.LedgerViewModel
 import com.example.know_it_all.presentation.viewmodel.AuthViewModel
@@ -53,7 +55,18 @@ fun VaultScreenEnhanced(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("The Vault") })
+            TopAppBar(
+                title = { 
+                    Text(
+                        "THE VAULT",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                    ) 
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                )
+            )
         }
     ) { innerPadding ->
         Column(
@@ -87,10 +100,9 @@ fun VaultScreenEnhanced(
                 )
             }
 
-            Text(
-                "Recent Transactions",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 8.dp)
+            ColoredSectionHeader(
+                title = "Recent Transactions",
+                color = MaterialTheme.colorScheme.tertiary
             )
 
             if (ledgerState.isLoading) {

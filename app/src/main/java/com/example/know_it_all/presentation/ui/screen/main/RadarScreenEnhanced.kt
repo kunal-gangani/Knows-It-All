@@ -32,9 +32,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.know_it_all.KnowItAllApplication
 import com.example.know_it_all.presentation.ui.components.BottomNavigationBar
 import com.example.know_it_all.presentation.ui.components.UserCard
 import com.example.know_it_all.presentation.viewmodel.AuthViewModel
@@ -69,6 +71,9 @@ fun RadarScreenEnhanced(
     radarViewModel: RadarViewModel,
     authViewModel: AuthViewModel
 ) {
+    val context = LocalContext.current
+    val app = context.applicationContext as KnowItAllApplication
+    
     val radarState by radarViewModel.uiState.collectAsState()
     val authState by authViewModel.uiState.collectAsState()
 
@@ -76,8 +81,20 @@ fun RadarScreenEnhanced(
         Manifest.permission.ACCESS_FINE_LOCATION
     )
 
+    LaunchedEffect(Unit) {
+        // On first launch, if permission hasn't been asked, request it
+        if (!app.sessionManager.hasLocationPermissionBeenAsked() && 
+            !locationPermissionState.status.isGranted) {
+            locationPermissionState.launchPermissionRequest()
+            app.sessionManager.setLocationPermissionAsked()
+        } else if (locationPermissionState.status.isGranted) {
+            app.sessionManager.setLocationPermissionEnabled(true)
+        }
+    }
+
     LaunchedEffect(locationPermissionState.status.isGranted, authState.token) {
         if (locationPermissionState.status.isGranted && authState.token != null) {
+            app.sessionManager.setLocationPermissionEnabled(true)
             radarViewModel.loadNearbyUsers(authState.token!!, radarState.radiusKm)
         }
     }
@@ -94,9 +111,10 @@ fun RadarScreenEnhanced(
                 title = {
                     Column {
                         Text(
-                            "🧭 Skill Radar",
+                            "SKILL RADAR",
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             "Discover nearby mentors",
@@ -106,7 +124,7 @@ fun RadarScreenEnhanced(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 actions = {

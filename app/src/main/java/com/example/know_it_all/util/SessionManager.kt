@@ -12,6 +12,8 @@ class SessionManager(context: Context) {
         private const val KEY_USER_ID = "user_id"
         private const val KEY_USER_EMAIL = "user_email"
         private const val KEY_USER_NAME = "user_name"
+        private const val KEY_LOCATION_PERMISSION_ASKED = "location_permission_asked"
+        private const val KEY_LOCATION_PERMISSION_ENABLED = "location_permission_enabled"
     }
 
     /**
@@ -73,5 +75,33 @@ class SessionManager(context: Context) {
      */
     fun isLoggedIn(): Boolean {
         return getToken() != null && getUserId() != null
+    }
+
+    /**
+     * Mark that location permission has been asked
+     */
+    fun setLocationPermissionAsked() {
+        prefs.edit().putBoolean(KEY_LOCATION_PERMISSION_ASKED, true).apply()
+    }
+
+    /**
+     * Check if location permission has already been asked
+     */
+    fun hasLocationPermissionBeenAsked(): Boolean {
+        return prefs.getBoolean(KEY_LOCATION_PERMISSION_ASKED, false)
+    }
+
+    /**
+     * Save location permission preference
+     */
+    fun setLocationPermissionEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_LOCATION_PERMISSION_ENABLED, enabled).apply()
+    }
+
+    /**
+     * Get location permission preference (default: false if not asked)
+     */
+    fun isLocationPermissionEnabled(): Boolean {
+        return prefs.getBoolean(KEY_LOCATION_PERMISSION_ENABLED, false)
     }
 }
