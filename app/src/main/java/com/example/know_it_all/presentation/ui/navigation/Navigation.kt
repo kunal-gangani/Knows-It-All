@@ -1,113 +1,46 @@
-package com.example.know_it_all.presentation.ui.navigation
+package com.example.know_it_all.data.remote
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.example.know_it_all.KnowItAllApplication
-import com.example.know_it_all.presentation.ui.screen.auth.LoginScreen
-import com.example.know_it_all.presentation.ui.screen.auth.RegisterScreen
-import com.example.know_it_all.presentation.ui.screen.auth.SplashScreen
-import com.example.know_it_all.presentation.ui.screen.main.RadarScreenEnhanced
-import com.example.know_it_all.presentation.ui.screen.main.TradeScreenEnhanced
-import com.example.know_it_all.presentation.ui.screen.main.VaultScreenEnhanced
-import com.example.know_it_all.presentation.ui.screen.main.SkillProfileScreenEnhanced
-import com.example.know_it_all.presentation.viewmodel.AuthViewModel
-import com.example.know_it_all.presentation.viewmodel.RadarViewModel
-import com.example.know_it_all.presentation.viewmodel.TradeViewModel
-import com.example.know_it_all.presentation.viewmodel.LedgerViewModel
-import com.example.know_it_all.presentation.viewmodel.SkillViewModel
-import com.example.know_it_all.presentation.viewmodel.ViewModelFactory
+import com.example.know_it_all.BuildConfig
+import com.example.know_it_all.data.remote.api.LedgerService
+import com.example.know_it_all.data.remote.api.SkillService
+import com.example.know_it_all.data.remote.api.SwapService
+import com.example.know_it_all.data.remote.api.UserService
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
-sealed class Screen(val route: String) {
-    object Splash : Screen("splash")
-    object Login : Screen("login")
-    object Register : Screen("register")
-    object Radar : Screen("radar")
-    object Trade : Screen("trade")
-    object Vault : Screen("vault")
-    object SkillProfile : Screen("skill_profile")
-}
+object RetrofitClient {
 
-@Composable
-fun KnowItAllNavigation(
-    modifier: Modifier = Modifier,
-    navController: NavHostController = rememberNavController(),
-    startDestination: String = Screen.Splash.route
-) {
-    val context = LocalContext.current
-    val app = context.applicationContext as KnowItAllApplication
-    
-    val authViewModel: AuthViewModel = viewModel(
-        factory = ViewModelFactory(
-            userRepository = app.userRepository,
-            sessionManager = app.sessionManager
-        )
-    )
-    
-    val radarViewModel: RadarViewModel = viewModel(
-        factory = ViewModelFactory(
-            userRepository = app.userRepository
-        )
-    )
-    
-    val tradeViewModel: TradeViewModel = viewModel(
-        factory = ViewModelFactory(
-            userRepository = app.userRepository,
-            swapRepository = app.swapRepository
-        )
-    )
-    
-    val ledgerViewModel: LedgerViewModel = viewModel(
-        factory = ViewModelFactory(
-            userRepository = app.userRepository,
-            ledgerRepository = app.ledgerRepository,
-            skillRepository = app.skillRepository
-        )
-    )
-    
-    val skillViewModel: SkillViewModel = viewModel(
-        factory = ViewModelFactory(
-            userRepository = app.userRepository,
-            skillRepository = app.skillRepository
-        )
-    )
-    
-    NavHost(
-        navController = navController,
-        startDestination = startDestination,
-        modifier = modifier
-    ) {
-        composable(Screen.Splash.route) {
-            SplashScreen(
-                navController = navController,
-                isLoggedIn = app.sessionManager.isLoggedIn()
-            )
-        }
-        composable(Screen.Login.route) {
-            LoginScreen(navController, authViewModel)
-        }
-        composable(Screen.Register.route) {
-            RegisterScreen(navController, authViewModel)
-        }
-        composable(Screen.Radar.route) {
-            RadarScreenEnhanced(navController, radarViewModel, authViewModel)
-        }
-        composable(Screen.Trade.route) {
-            TradeScreenEnhanced(navController, tradeViewModel, authViewModel)
-        }
-        composable(Screen.Vault.route) {
-            VaultScreenEnhanced(navController, ledgerViewModel, authViewModel)
-        }
-        composable(Screen.SkillProfile.route) {
-            SkillProfileScreenEnhanced(navController, skillViewModel, authViewModel)
+    private val loggingInterceptor: HttpLoggingInterceptor by lazy {
+        HttpLoggingInterceptor().apply {
+            level = if (BuildConfig.DEBUG)
+                HttpLoggingInterceptor.Level.BODY
+            else
+                HttpLoggingInterceptor.Level.NONE
         }
     }
+
+    private val httpClient: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .addInterceptor(loggingInterceptor)
+            .build()
+    }
+
+    private val retrofit: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(BuildConfig.BASE_URL)
+            .client(httpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    val userService: UserService by lazy { retrofit.create(UserService::class.java) }
+    val skillService: SkillService by lazy { retrofit.create(SkillService::class.java) }
+    val swapService: SwapService by lazy { retrofit.create(SwapService::class.java) }
+    val ledgerService: LedgerService by lazy { retrofit.create(LedgerService::class.java) }
 }
