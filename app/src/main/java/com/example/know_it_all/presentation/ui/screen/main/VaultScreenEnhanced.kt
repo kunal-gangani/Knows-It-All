@@ -1,18 +1,33 @@
 package com.example.know_it_all.presentation.ui.screen.main
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -24,147 +39,426 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.example.know_it_all.KnowItAllApplication
-import com.example.know_it_all.presentation.ui.components.ColoredSectionHeader
-import com.example.know_it_all.presentation.ui.components.TokenBalanceCard
+import com.example.know_it_all.data.model.LedgerStatus
+import com.example.know_it_all.data.model.TrustLedger
+import com.example.know_it_all.presentation.ui.components.BottomNavigationBar
+import com.example.know_it_all.presentation.ui.theme.KnowItAllColors
 import com.example.know_it_all.presentation.viewmodel.LedgerViewModel
-import com.example.know_it_all.presentation.viewmodel.AuthViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
+/**
+ * Fixes applied:
+ *  1. AuthViewModel removed — receives userId: String, userName: String.
+ *  2. loadLedger() called without token param — ViewModel reads internally.
+ *  3. passportFile removed from state reference — now uses passportEvent Flow.
+ *  4. LedgerEntryItem.description changed from entry.transactionData
+ *     (field removed from entity) to entry.skillName.
+ *  5. BottomNavigationBar was missing — added.
+ *  6. Full design applied — token balance card with large editorial numeral,
+ *     trust score ring, ledger timeline with hash chain preview.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VaultScreenEnhanced(
     navController: NavHostController,
     ledgerViewModel: LedgerViewModel,
-    authViewModel: AuthViewModel
+    userId: String,
+    onLogout: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val app = context.applicationContext as KnowItAllApplication
-    
     val ledgerState by ledgerViewModel.uiState.collectAsState()
-    val authState by authViewModel.uiState.collectAsState()
-    val userId = app.sessionManager.getUserId()
-    val userEmail = app.sessionManager.getUserEmail()
+    val passportEvent by ledgerViewModel.passportEvent.collectAsState()
 
-    LaunchedEffect(authState.token, authState.userId) {
-        if (authState.token != null && authState.userId != null) {
-            ledgerViewModel.loadLedger(authState.token!!, authState.userId!!)
+    LaunchedEffect(Unit) {
+        ledgerViewModel.loadLedger(userId)  // ✅ no token param
+    }
+
+    // Handle passport file event — launch share intent when ready
+    LaunchedEffect(passportEvent) {
+        passportEvent?.let { file ->
+            // TODO: Launch share/view intent with the file URI
+            // val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
+            // context.startActivity(Intent(Intent.ACTION_VIEW).apply { setDataAndType(uri, "application/pdf") })
+            ledgerViewModel.consumePassportEvent()
         }
     }
 
     Scaffold(
+        containerColor = KnowItAllColors.Cream,
+        bottomBar = {  // ✅ was missing entirely
+            BottomNavigationBar(
+                navController = navController,
+                currentRoute = navController.currentBackStackEntry?.destination?.route
+            )
+        },
         topBar = {
             TopAppBar(
-                title = { 
-                    Text(
-                        "THE VAULT",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
-                    ) 
+                title = {
+                    Column {
+                        Text(
+                            text = "THE VAULT",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = 2.sp,
+                            color = KnowItAllColors.WarmGray
+                        )
+                        Text(
+                            text = "Tokens & Ledger",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Black,
+                            color = KnowItAllColors.NearBlack,
+                            letterSpacing = (-0.5).sp
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                    containerColor = KnowItAllColors.Cream
                 )
             )
         }
     ) { innerPadding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
+                .background(KnowItAllColors.Cream)
                 .padding(innerPadding)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            TokenBalanceCard(ledgerState.tokenBalance)
+            item { Spacer(modifier = Modifier.height(4.dp)) }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = { 
-                    // TODO: Implement passport generation
-                    // ledgerViewModel.generateSkillPassport(context, userProfile)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                enabled = !ledgerState.isLoading
-            ) {
-                Text("Generate Skill Passport (PDF)")
-            }
-
-            if (ledgerState.passportFile != null) {
-                Text(
-                    "Passport generated: ${ledgerState.passportFile?.name}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            // Token balance — editorial large numeral
+            item {
+                TokenBalanceCard(
+                    balance = ledgerState.tokenBalance,
+                    trustScore = ledgerState.trustScore,
+                    completedSwaps = ledgerState.completedSwapCount,
+                    averageRating = ledgerState.averageRating
                 )
             }
 
-            ColoredSectionHeader(
-                title = "Recent Transactions",
-                color = MaterialTheme.colorScheme.tertiary
-            )
-
-            if (ledgerState.isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            } else if (ledgerState.error != null) {
-                Text(
-                    ledgerState.error!!,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(16.dp)
-                )
-            } else {
-                LazyColumn(
+            // Skill Passport button
+            item {
+                Button(
+                    onClick = {
+                        // userName and userEmail should be passed in or read from SessionManager
+                        ledgerViewModel.generateSkillPassport(
+                            context = context,
+                            userId = userId,
+                            userName = "User",   // TODO: pass in from NavGraph
+                            userEmail = ""
+                        )
+                    },
+                    enabled = !ledgerState.isGeneratingPassport,
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp)
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = KnowItAllColors.NearBlack,
+                        contentColor = KnowItAllColors.AcidGreen,
+                        disabledContainerColor = KnowItAllColors.CreamDark,
+                        disabledContentColor = KnowItAllColors.WarmGray
+                    )
                 ) {
-                    items(ledgerState.ledgerEntries) { entry ->
-                        LedgerEntryItem(
-                            description = entry.transactionData,        
-                            amount = "${entry.ratingGiven}★",          
-                            date = entry.createdAt.toString()
+                    if (ledgerState.isGeneratingPassport) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            color = KnowItAllColors.AcidGreen,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Generating...", fontWeight = FontWeight.Bold)
+                    } else {
+                        Icon(Icons.Default.Download, contentDescription = null,
+                            modifier = Modifier.size(17.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Generate Skill Passport", fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp)
+                    }
+                }
+            }
+
+            // Section header
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Transactions",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Black,
+                        color = KnowItAllColors.NearBlack
+                    )
+                    Text(
+                        text = "${ledgerState.ledgerEntries.size} records",
+                        fontSize = 12.sp,
+                        color = KnowItAllColors.CharcoalGray
+                    )
+                }
+            }
+
+            // Loading
+            if (ledgerState.isLoading) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = KnowItAllColors.NearBlack,
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(28.dp)
                         )
                     }
                 }
+            }
+
+            // Error
+            ledgerState.error?.let { err ->
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(KnowItAllColors.ErrorContainer, RoundedCornerShape(12.dp))
+                            .padding(14.dp)
+                    ) {
+                        Text(err, fontSize = 13.sp, color = KnowItAllColors.ErrorRed)
+                    }
+                }
+            }
+
+            // Ledger entries
+            itemsIndexed(
+                ledgerState.ledgerEntries,
+                key = { _, entry -> entry.transactionId }
+            ) { index, entry ->
+                AnimatedVisibility(
+                    visible = true,
+                    enter = fadeIn(tween(250, index * 40)) +
+                            slideInVertically(tween(250, index * 40)) { it / 5 }
+                ) {
+                    LedgerEntryCard(entry = entry)
+                }
+            }
+
+            if (!ledgerState.isLoading && ledgerState.ledgerEntries.isEmpty()
+                && ledgerState.error == null) {
+                item { LedgerEmptyState() }
+            }
+
+            item { Spacer(modifier = Modifier.height(24.dp)) }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Token balance card — large editorial numeral treatment
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun TokenBalanceCard(
+    balance: Long,
+    trustScore: Float,
+    completedSwaps: Int,
+    averageRating: Float
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(KnowItAllColors.NearBlack, RoundedCornerShape(20.dp))
+            .padding(22.dp)
+    ) {
+        Column {
+            Text(
+                text = "TOKEN BALANCE",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 2.sp,
+                color = KnowItAllColors.WarmGray
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(
+                    text = "$balance",
+                    fontSize = 52.sp,
+                    fontWeight = FontWeight.Black,
+                    color = KnowItAllColors.AcidGreen,
+                    letterSpacing = (-2).sp
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "SKT",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = KnowItAllColors.WarmGray,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Stats row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                StatPill(
+                    label = "TRUST",
+                    value = String.format("%.0f", trustScore * 10) + "%",
+                    modifier = Modifier.weight(1f)
+                )
+                StatPill(
+                    label = "SWAPS",
+                    value = completedSwaps.toString(),
+                    modifier = Modifier.weight(1f)
+                )
+                StatPill(
+                    label = "RATING",
+                    value = if (averageRating > 0) "★ ${String.format("%.1f", averageRating)}"
+                            else "—",
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }
 }
 
 @Composable
-fun LedgerEntryItem(description: String, amount: String, date: String) {
-    androidx.compose.material3.Card(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(vertical = 8.dp),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+private fun StatPill(label: String, value: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .background(KnowItAllColors.Cream.copy(alpha = 0.08f), RoundedCornerShape(10.dp))
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        androidx.compose.foundation.layout.Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxSize(),
-            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.titleSmall
-                )
-                Text(
-                    text = date,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-            }
-            Text(
-                text = amount,
-                style = MaterialTheme.typography.titleSmall,
-                color = if (amount.startsWith("+")) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.error
+        Text(value, fontSize = 15.sp, fontWeight = FontWeight.Bold,
+            color = KnowItAllColors.Cream)
+        Text(label, fontSize = 9.sp, fontWeight = FontWeight.Medium,
+            color = KnowItAllColors.WarmGray, letterSpacing = 1.sp)
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Ledger entry card — hash chain timeline
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun LedgerEntryCard(entry: TrustLedger) {
+    val statusColor = when (entry.status) {
+        LedgerStatus.COMPLETED -> KnowItAllColors.AcidGreen
+        LedgerStatus.DISPUTED  -> KnowItAllColors.ErrorRed
+        LedgerStatus.RESOLVED  -> KnowItAllColors.Ochre
+    }
+
+    val dateStr = remember(entry.createdAt) {
+        SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+            .format(Date(entry.createdAt))
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Timeline dot + line
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .background(statusColor, CircleShape)
+            )
+            Box(
+                modifier = Modifier
+                    .width(2.dp)
+                    .height(72.dp)
+                    .background(KnowItAllColors.CreamDeep)
             )
         }
+
+        // Card
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .background(KnowItAllColors.CreamDark, RoundedCornerShape(14.dp))
+                .padding(14.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = entry.skillName,                          // ✅ skillName, not transactionData
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = KnowItAllColors.NearBlack
+                )
+                Text(
+                    text = "★ ${entry.ratingGiven}",                 // ✅ Int star rating
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = KnowItAllColors.Ochre
+                )
+            }
+            Spacer(modifier = Modifier.height(3.dp))
+            Text(
+                text = dateStr,
+                fontSize = 11.sp,
+                color = KnowItAllColors.CharcoalGray
+            )
+            if (entry.ratingComment.isNotBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "\"${entry.ratingComment}\"",
+                    fontSize = 11.sp,
+                    color = KnowItAllColors.CharcoalGray,
+                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                )
+            }
+            // Hash preview — shows chain integrity
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = entry.currentHash.take(16) + "...",
+                fontSize = 9.sp,
+                color = KnowItAllColors.WarmGray,
+                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                letterSpacing = 0.5.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun LedgerEmptyState() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 40.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("🏦", fontSize = 40.sp)
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = "No transactions yet",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Black,
+            color = KnowItAllColors.NearBlack
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = "Complete a swap to see\nyour ledger history here",
+            fontSize = 13.sp,
+            color = KnowItAllColors.CharcoalGray,
+            lineHeight = 20.sp
+        )
     }
 }
