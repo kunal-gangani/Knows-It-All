@@ -50,7 +50,7 @@ import androidx.navigation.NavHostController
 import com.example.know_it_all.data.model.SwapStatus
 import com.example.know_it_all.data.model.dto.SwapDTO
 import com.example.know_it_all.presentation.ui.components.BottomNavigationBar
-import com.example.know_it_all.presentation.ui.theme.KnowItAllColors
+import com.example.know_it_all.ui.theme.KnowItAllColors
 import com.example.know_it_all.presentation.viewmodel.TradeViewModel
 
 /**

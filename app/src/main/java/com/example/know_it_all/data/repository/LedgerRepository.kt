@@ -138,7 +138,7 @@ class LedgerRepository(
             val response = ledgerService.disputeTransaction(
                 "Bearer $token",
                 transactionId,
-                reason
+                com.example.know_it_all.data.remote.api.DisputeBody(reason)  // ✅ wrapped in DTO
             )
             if (response.success) {
                 // Update local cache status immediately (optimistic update)

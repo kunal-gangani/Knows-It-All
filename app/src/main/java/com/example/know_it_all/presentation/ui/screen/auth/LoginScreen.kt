@@ -55,7 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.know_it_all.presentation.ui.navigation.Screen
-import com.example.know_it_all.presentation.ui.theme.KnowItAllColors
+import com.example.know_it_all.ui.theme.KnowItAllColors
 import com.example.know_it_all.presentation.viewmodel.AuthViewModel
 
 private fun isValidEmail(email: String) =
@@ -101,7 +101,7 @@ fun LoginScreen(
         if (authState.isAuthenticated) {
             authViewModel.clearError()
             navController.navigate(Screen.Radar.route) {
-                popUpTo(Screen.Login.route) { inclusive = true }
+                popUpTo(Screen.Login.route) { isInclusive = true }
             }
         }
     }

@@ -60,7 +60,7 @@ import com.example.know_it_all.data.model.dto.SkillCreateRequest
 import com.example.know_it_all.presentation.ui.components.BottomNavigationBar
 import com.example.know_it_all.presentation.ui.screen.auth.FieldLabel
 import com.example.know_it_all.presentation.ui.screen.auth.KnowItAllTextField
-import com.example.know_it_all.presentation.ui.theme.KnowItAllColors
+import com.example.know_it_all.ui.theme.KnowItAllColors
 import com.example.know_it_all.presentation.viewmodel.SkillViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar

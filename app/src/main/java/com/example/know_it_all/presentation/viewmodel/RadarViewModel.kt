@@ -134,4 +134,14 @@ class RadarViewModel(
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
     }
+
+    fun refreshLocationAndLoad(context: Context) {
+        viewModelScope.launch {
+            val location = LocationService(context).getBestAvailableLocation()
+            if (location != null) {
+                updateLocation(location.latitude, location.longitude)
+            }
+            loadNearbyUsers()
+        }
+    }
 }

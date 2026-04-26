@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.know_it_all.presentation.ui.navigation.Screen
-import com.example.know_it_all.presentation.ui.theme.KnowItAllColors
+import com.example.know_it_all.ui.theme.KnowItAllColors
 import kotlinx.coroutines.delay
 
 /**
@@ -82,11 +82,11 @@ fun SplashScreen(
         delay(1800)
         if (isLoggedIn) {
             navController.navigate(Screen.Radar.route) {
-                popUpTo(Screen.Splash.route) { inclusive = true }
+                popUpTo(Screen.Splash.route) { isInclusive = true }
             }
         } else {
             navController.navigate(Screen.Login.route) {
-                popUpTo(Screen.Splash.route) { inclusive = true }
+                popUpTo(Screen.Splash.route) { isInclusive = true }
             }
         }
     }

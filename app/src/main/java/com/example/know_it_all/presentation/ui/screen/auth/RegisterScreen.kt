@@ -51,7 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.know_it_all.presentation.ui.navigation.Screen
-import com.example.know_it_all.presentation.ui.theme.KnowItAllColors
+import com.example.know_it_all.ui.theme.KnowItAllColors
 import com.example.know_it_all.presentation.viewmodel.AuthViewModel
 
 private fun nameError(name: String) = when {
@@ -107,7 +107,7 @@ fun RegisterScreen(
         if (authState.isAuthenticated) {
             authViewModel.clearError()
             navController.navigate(Screen.Radar.route) {
-                popUpTo(0) { inclusive = true }
+                popUpTo(0) { isInclusive = true }
             }
         }
     }

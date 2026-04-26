@@ -1,5 +1,6 @@
 package com.example.know_it_all.data.remote
 
+import com.example.know_it_all.BuildConfig
 import com.example.know_it_all.data.remote.api.LedgerService
 import com.example.know_it_all.data.remote.api.SkillService
 import com.example.know_it_all.data.remote.api.SwapService
@@ -10,35 +11,64 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
+/**
+ * Fixes applied:
+ *  1. httpClient and retrofit use `by lazy` — built once, reused.
+ *     The original `get()` bodies rebuilt OkHttpClient (thread pools,
+ *     connection pools) on every property access — a resource leak.
+ *  2. Logging gated on BuildConfig.DEBUG — no body logging in release.
+ *  3. BASE_URL from BuildConfig.BASE_URL — add this to build.gradle.kts:
+ *
+ *       android {
+ *         buildFeatures { buildConfig = true }
+ *         defaultConfig {
+ *           buildConfigField("String", "BASE_URL", "\"http://192.168.0.107:8080/api/v1/\"")
+ *         }
+ *         buildTypes {
+ *           release {
+ *             buildConfigField("String", "BASE_URL", "\"https://api.knowitall.app/api/v1/\"")
+ *           }
+ *         }
+ *       }
+ *
+ *  4. Service instances exposed as `val` properties (lazy) — no
+ *     createXxxService() factory methods that each call retrofit.create()
+ *     unnecessarily on every invocation.
+ *
+ *  5. THERE MUST BE ONLY ONE RetrofitClient in the project. The copy
+ *     that was pasted into presentation/ui/navigation/Navigation.kt
+ *     must be deleted — it causes a "Redeclaration" compile error.
+ */
 object RetrofitClient {
-    private const val BASE_URL = "http://192.168.0.107:8080/api/v1/"
-    // Change to "https://your-backend-domain.com/api/v1/" for production
 
-    private val httpClient: OkHttpClient
-        get() {
-            val clientBuilder = OkHttpClient.Builder()
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS)
-
-            // Enable logging in all builds (remove BuildConfig dependency)
-            val loggingInterceptor = HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
-            }
-            clientBuilder.addInterceptor(loggingInterceptor)
-
-            return clientBuilder.build()
+    private val loggingInterceptor: HttpLoggingInterceptor by lazy {
+        HttpLoggingInterceptor().apply {
+            level = if (BuildConfig.DEBUG)
+                HttpLoggingInterceptor.Level.BODY
+            else
+                HttpLoggingInterceptor.Level.NONE
         }
+    }
 
-    private val retrofit: Retrofit
-        get() = Retrofit.Builder()
-            .baseUrl(BASE_URL)
+    private val httpClient: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .addInterceptor(loggingInterceptor)
+            .build()
+    }
+
+    private val retrofit: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(BuildConfig.BASE_URL)
             .client(httpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
+    }
 
-    fun createUserService(): UserService = retrofit.create(UserService::class.java)
-    fun createSkillService(): SkillService = retrofit.create(SkillService::class.java)
-    fun createSwapService(): SwapService = retrofit.create(SwapService::class.java)
-    fun createLedgerService(): LedgerService = retrofit.create(LedgerService::class.java)
+    val userService: UserService by lazy { retrofit.create(UserService::class.java) }
+    val skillService: SkillService by lazy { retrofit.create(SkillService::class.java) }
+    val swapService: SwapService by lazy { retrofit.create(SwapService::class.java) }
+    val ledgerService: LedgerService by lazy { retrofit.create(LedgerService::class.java) }
 }

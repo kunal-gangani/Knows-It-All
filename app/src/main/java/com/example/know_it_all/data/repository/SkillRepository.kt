@@ -173,7 +173,14 @@ class SkillRepository(
         endorserId: String
     ): Result<Unit> {
         return try {
-            val response = skillService.endorseSkill("Bearer $token", skillId, endorserId)
+            val response = skillService.endorseSkill(
+                "Bearer $token",
+                skillId,
+                com.example.know_it_all.data.model.dto.SkillEndorseRequest(
+                    skillId = skillId,
+                    endorserId = endorserId
+                )   // ✅ wrapped in DTO
+            )
             if (response.success) {
                 Result.success(Unit)
             } else {

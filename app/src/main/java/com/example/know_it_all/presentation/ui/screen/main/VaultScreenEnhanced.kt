@@ -46,7 +46,7 @@ import androidx.navigation.NavHostController
 import com.example.know_it_all.data.model.LedgerStatus
 import com.example.know_it_all.data.model.TrustLedger
 import com.example.know_it_all.presentation.ui.components.BottomNavigationBar
-import com.example.know_it_all.presentation.ui.theme.KnowItAllColors
+import com.example.know_it_all.ui.theme.KnowItAllColors
 import com.example.know_it_all.presentation.viewmodel.LedgerViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -69,6 +69,7 @@ fun VaultScreenEnhanced(
     navController: NavHostController,
     ledgerViewModel: LedgerViewModel,
     userId: String,
+    userName: String,           // ✅ passed from NavGraph via authState.userName
     onLogout: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -82,9 +83,22 @@ fun VaultScreenEnhanced(
     // Handle passport file event — launch share intent when ready
     LaunchedEffect(passportEvent) {
         passportEvent?.let { file ->
-            // TODO: Launch share/view intent with the file URI
-            // val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
-            // context.startActivity(Intent(Intent.ACTION_VIEW).apply { setDataAndType(uri, "application/pdf") })
+            try {
+                val uri = androidx.core.content.FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.fileprovider",  // must match AndroidManifest authority
+                    file
+                )
+                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, "application/pdf")
+                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(intent)
+            } catch (e: Exception) {
+                // No PDF viewer installed — fall through, passport file is still saved
+                e.printStackTrace()
+            }
             ledgerViewModel.consumePassportEvent()
         }
     }

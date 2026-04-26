@@ -56,7 +56,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.know_it_all.data.model.User
 import com.example.know_it_all.presentation.ui.components.BottomNavigationBar
-import com.example.know_it_all.presentation.ui.theme.KnowItAllColors
+import com.example.know_it_all.ui.theme.KnowItAllColors
 import com.example.know_it_all.presentation.viewmodel.RadarViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -101,7 +101,7 @@ fun RadarScreenEnhanced(
 
     LaunchedEffect(locationPermissionState.status.isGranted) {
         if (locationPermissionState.status.isGranted) {
-            radarViewModel.loadNearbyUsers()   // ✅ no token param — read internally
+            radarViewModel.refreshLocationAndLoad(context)   
         }
     }
 
