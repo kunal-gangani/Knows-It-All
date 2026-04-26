@@ -1,4 +1,15 @@
 package com.example.know_it_all.presentation.ui.screen.main
+import com.example.know_it_all.ui.theme.AcidGreen
+import com.example.know_it_all.ui.theme.AcidGreenDark
+import com.example.know_it_all.ui.theme.Cream
+import com.example.know_it_all.ui.theme.CreamDark
+import com.example.know_it_all.ui.theme.CreamDeep
+import com.example.know_it_all.ui.theme.NearBlack
+import com.example.know_it_all.ui.theme.CharcoalGray
+import com.example.know_it_all.ui.theme.WarmGray
+import com.example.know_it_all.ui.theme.Ochre
+import com.example.know_it_all.ui.theme.ErrorRed
+import com.example.know_it_all.ui.theme.ErrorContainerColor
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -60,7 +71,6 @@ import com.example.know_it_all.data.model.dto.SkillCreateRequest
 import com.example.know_it_all.presentation.ui.components.BottomNavigationBar
 import com.example.know_it_all.presentation.ui.screen.auth.FieldLabel
 import com.example.know_it_all.presentation.ui.screen.auth.KnowItAllTextField
-import com.example.know_it_all.ui.theme.KnowItAllColors
 import com.example.know_it_all.presentation.viewmodel.SkillViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -106,7 +116,7 @@ fun SkillProfileScreenEnhanced(
     }
 
     Scaffold(
-        containerColor = KnowItAllColors.Cream,
+        containerColor = Cream,
         bottomBar = {
             BottomNavigationBar(
                 navController = navController,
@@ -122,26 +132,26 @@ fun SkillProfileScreenEnhanced(
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold,
                             letterSpacing = 2.sp,
-                            color = KnowItAllColors.WarmGray
+                            color = WarmGray
                         )
                         Text(
                             text = "My Skills",
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Black,
-                            color = KnowItAllColors.NearBlack,
+                            color = NearBlack,
                             letterSpacing = (-0.5).sp
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = KnowItAllColors.Cream
+                    containerColor = Cream
                 ),
                 actions = {
                     IconButton(onClick = onLogout) {
                         Icon(
                             Icons.Default.Logout,
                             contentDescription = "Logout",
-                            tint = KnowItAllColors.CharcoalGray,
+                            tint = CharcoalGray,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -152,7 +162,7 @@ fun SkillProfileScreenEnhanced(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(KnowItAllColors.Cream)
+                .background(Cream)
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -180,15 +190,15 @@ fun SkillProfileScreenEnhanced(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .background(
-                                    KnowItAllColors.AcidGreen.copy(alpha = 0.15f),
+                                    AcidGreen.copy(alpha = 0.15f),
                                     RoundedCornerShape(12.dp)
                                 )
-                                .border(1.dp, KnowItAllColors.AcidGreen.copy(alpha = 0.4f),
+                                .border(1.dp, AcidGreen.copy(alpha = 0.4f),
                                     RoundedCornerShape(12.dp))
                                 .padding(14.dp)
                         ) {
                             Text(msg, fontSize = 13.sp, fontWeight = FontWeight.Medium,
-                                color = KnowItAllColors.NearBlack)
+                                color = NearBlack)
                         }
                     }
                 }
@@ -202,10 +212,10 @@ fun SkillProfileScreenEnhanced(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(KnowItAllColors.ErrorContainer, RoundedCornerShape(12.dp))
+                                .background(ErrorContainerColor, RoundedCornerShape(12.dp))
                                 .padding(14.dp)
                         ) {
-                            Text(err, fontSize = 13.sp, color = KnowItAllColors.ErrorRed)
+                            Text(err, fontSize = 13.sp, color = ErrorRed)
                         }
                     }
                 }
@@ -222,20 +232,20 @@ fun SkillProfileScreenEnhanced(
                         text = "My Skills",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Black,
-                        color = KnowItAllColors.NearBlack
+                        color = NearBlack
                     )
                     // Add skill button — acid green icon
                     Box(
                         modifier = Modifier
                             .size(36.dp)
-                            .background(KnowItAllColors.AcidGreen, RoundedCornerShape(10.dp))
+                            .background(AcidGreen, RoundedCornerShape(10.dp))
                             .clickable { showAddSkillSheet = true },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             Icons.Default.Add,
                             contentDescription = "Add skill",
-                            tint = KnowItAllColors.NearBlack,
+                            tint = NearBlack,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -252,7 +262,7 @@ fun SkillProfileScreenEnhanced(
                         contentAlignment = Alignment.Center
                     ) {
                         androidx.compose.material3.CircularProgressIndicator(
-                            color = KnowItAllColors.NearBlack,
+                            color = NearBlack,
                             strokeWidth = 2.dp,
                             modifier = Modifier.size(24.dp)
                         )
@@ -291,7 +301,7 @@ fun SkillProfileScreenEnhanced(
         ModalBottomSheet(
             onDismissRequest = { showAddSkillSheet = false },
             sheetState = sheetState,
-            containerColor = KnowItAllColors.Cream
+            containerColor = Cream
         ) {
             AddSkillSheet(
                 onAdd = { request ->
@@ -313,7 +323,7 @@ private fun ProfileHeaderCard(userName: String, userId: String, skillCount: Int)
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(KnowItAllColors.NearBlack, RoundedCornerShape(20.dp))
+            .background(NearBlack, RoundedCornerShape(20.dp))
             .padding(20.dp)
     ) {
         Row(
@@ -324,14 +334,14 @@ private fun ProfileHeaderCard(userName: String, userId: String, skillCount: Int)
             Box(
                 modifier = Modifier
                     .size(64.dp)
-                    .background(KnowItAllColors.AcidGreen, CircleShape),
+                    .background(AcidGreen, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = userName.take(1).uppercase(),
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Black,
-                    color = KnowItAllColors.NearBlack
+                    color = NearBlack
                 )
             }
 
@@ -340,20 +350,20 @@ private fun ProfileHeaderCard(userName: String, userId: String, skillCount: Int)
                     text = userName,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Black,
-                    color = KnowItAllColors.Cream,
+                    color = Cream,
                     letterSpacing = (-0.3).sp
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = "Member since ${Calendar.getInstance().get(Calendar.YEAR)}", // ✅ dynamic
                     fontSize = 12.sp,
-                    color = KnowItAllColors.WarmGray
+                    color = WarmGray
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Box(
                     modifier = Modifier
                         .background(
-                            KnowItAllColors.AcidGreen.copy(alpha = 0.15f),
+                            AcidGreen.copy(alpha = 0.15f),
                             RoundedCornerShape(6.dp)
                         )
                         .padding(horizontal = 10.dp, vertical = 3.dp)
@@ -362,7 +372,7 @@ private fun ProfileHeaderCard(userName: String, userId: String, skillCount: Int)
                         text = "$skillCount skills",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = KnowItAllColors.AcidGreen
+                        color = AcidGreen
                     )
                 }
             }
@@ -377,15 +387,15 @@ private fun ProfileHeaderCard(userName: String, userId: String, skillCount: Int)
 @Composable
 private fun SkillCard(skill: Skill, onDelete: () -> Unit) {
     val categoryColor = when (skill.category) {
-        SkillCategory.DIGITAL  -> KnowItAllColors.AcidGreen
-        SkillCategory.PHYSICAL -> KnowItAllColors.Ochre
-        SkillCategory.HYBRID   -> KnowItAllColors.CharcoalGray
+        SkillCategory.DIGITAL  -> AcidGreen
+        SkillCategory.PHYSICAL -> Ochre
+        SkillCategory.HYBRID   -> CharcoalGray
     }
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(KnowItAllColors.CreamDark, RoundedCornerShape(14.dp))
+            .background(CreamDark, RoundedCornerShape(14.dp))
             .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -406,18 +416,18 @@ private fun SkillCard(skill: Skill, onDelete: () -> Unit) {
                     text = skill.skillName,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = KnowItAllColors.NearBlack
+                    color = NearBlack
                 )
                 Text(
                     text = "${skill.proficiencyLevel.name} · ${skill.category.name} · ${skill.tokenValue}T",
                     fontSize = 11.sp,
-                    color = KnowItAllColors.CharcoalGray
+                    color = CharcoalGray
                 )
                 if (skill.endorsements > 0) {
                     Text(
                         text = "★ ${skill.endorsements} endorsements",
                         fontSize = 10.sp,
-                        color = KnowItAllColors.Ochre,
+                        color = Ochre,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -429,12 +439,12 @@ private fun SkillCard(skill: Skill, onDelete: () -> Unit) {
                 Box(
                     modifier = Modifier
                         .background(
-                            KnowItAllColors.AcidGreen.copy(alpha = 0.15f),
+                            AcidGreen.copy(alpha = 0.15f),
                             RoundedCornerShape(6.dp)
                         )
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
-                    Text("✓", fontSize = 11.sp, color = KnowItAllColors.AcidGreen,
+                    Text("✓", fontSize = 11.sp, color = AcidGreen,
                         fontWeight = FontWeight.Bold)
                 }
             }
@@ -445,7 +455,7 @@ private fun SkillCard(skill: Skill, onDelete: () -> Unit) {
                 Icon(
                     Icons.Default.Close,
                     contentDescription = "Delete skill",
-                    tint = KnowItAllColors.WarmGray,
+                    tint = WarmGray,
                     modifier = Modifier.size(16.dp)
                 )
             }
@@ -486,11 +496,11 @@ private fun AddSkillSheet(
                 text = "Add a Skill",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Black,
-                color = KnowItAllColors.NearBlack
+                color = NearBlack
             )
             IconButton(onClick = onDismiss) {
                 Icon(Icons.Default.Close, contentDescription = null,
-                    tint = KnowItAllColors.CharcoalGray)
+                    tint = CharcoalGray)
             }
         }
 
@@ -522,8 +532,8 @@ private fun AddSkillSheet(
                     Box(
                         modifier = Modifier
                             .background(
-                                if (isSelected) KnowItAllColors.NearBlack
-                                else KnowItAllColors.CreamDark,
+                                if (isSelected) NearBlack
+                                else CreamDark,
                                 RoundedCornerShape(10.dp)
                             )
                             .clickable { selectedCategory = cat }
@@ -533,8 +543,8 @@ private fun AddSkillSheet(
                             text = cat.name,
                             fontSize = 12.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) KnowItAllColors.AcidGreen
-                                    else KnowItAllColors.CharcoalGray
+                            color = if (isSelected) AcidGreen
+                                    else CharcoalGray
                         )
                     }
                 }
@@ -551,8 +561,8 @@ private fun AddSkillSheet(
                     Box(
                         modifier = Modifier
                             .background(
-                                if (isSelected) KnowItAllColors.NearBlack
-                                else KnowItAllColors.CreamDark,
+                                if (isSelected) NearBlack
+                                else CreamDark,
                                 RoundedCornerShape(10.dp)
                             )
                             .clickable { selectedLevel = level }
@@ -562,8 +572,8 @@ private fun AddSkillSheet(
                             text = level.take(4),   // "BEGI", "INTE", "ADVA", "EXPE"
                             fontSize = 11.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) KnowItAllColors.AcidGreen
-                                    else KnowItAllColors.CharcoalGray
+                            color = if (isSelected) AcidGreen
+                                    else CharcoalGray
                         )
                     }
                 }
@@ -590,8 +600,8 @@ private fun AddSkillSheet(
                 .height(52.dp),
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = KnowItAllColors.AcidGreen,
-                contentColor = KnowItAllColors.NearBlack
+                containerColor = AcidGreen,
+                contentColor = NearBlack
             )
         ) {
             Text("Add Skill", fontWeight = FontWeight.Bold, fontSize = 15.sp)
@@ -613,13 +623,13 @@ private fun SkillsEmptyState(onAdd: () -> Unit) {
             text = "No skills yet",
             fontSize = 20.sp,
             fontWeight = FontWeight.Black,
-            color = KnowItAllColors.NearBlack
+            color = NearBlack
         )
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = "Add your first skill to\nstart trading knowledge",
             fontSize = 13.sp,
-            color = KnowItAllColors.CharcoalGray,
+            color = CharcoalGray,
             lineHeight = 20.sp
         )
         Spacer(modifier = Modifier.height(20.dp))
@@ -627,8 +637,8 @@ private fun SkillsEmptyState(onAdd: () -> Unit) {
             onClick = onAdd,
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = KnowItAllColors.AcidGreen,
-                contentColor = KnowItAllColors.NearBlack
+                containerColor = AcidGreen,
+                contentColor = NearBlack
             )
         ) {
             Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))

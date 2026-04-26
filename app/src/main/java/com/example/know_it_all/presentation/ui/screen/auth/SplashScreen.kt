@@ -1,4 +1,15 @@
 package com.example.know_it_all.presentation.ui.screen.auth
+import com.example.know_it_all.ui.theme.AcidGreen
+import com.example.know_it_all.ui.theme.AcidGreenDark
+import com.example.know_it_all.ui.theme.Cream
+import com.example.know_it_all.ui.theme.CreamDark
+import com.example.know_it_all.ui.theme.CreamDeep
+import com.example.know_it_all.ui.theme.NearBlack
+import com.example.know_it_all.ui.theme.CharcoalGray
+import com.example.know_it_all.ui.theme.WarmGray
+import com.example.know_it_all.ui.theme.Ochre
+import com.example.know_it_all.ui.theme.ErrorRed
+import com.example.know_it_all.ui.theme.ErrorContainerColor
 
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
@@ -38,7 +49,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.know_it_all.presentation.ui.navigation.Screen
-import com.example.know_it_all.ui.theme.KnowItAllColors
 import kotlinx.coroutines.delay
 
 /**
@@ -82,11 +92,11 @@ fun SplashScreen(
         delay(1800)
         if (isLoggedIn) {
             navController.navigate(Screen.Radar.route) {
-                popUpTo(Screen.Splash.route) { isInclusive = true }
+                popUpTo(Screen.Splash.route) { inclusive = true }
             }
         } else {
             navController.navigate(Screen.Login.route) {
-                popUpTo(Screen.Splash.route) { isInclusive = true }
+                popUpTo(Screen.Splash.route) { inclusive = true }
             }
         }
     }
@@ -94,7 +104,7 @@ fun SplashScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(KnowItAllColors.Cream),
+            .background(Cream),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -110,7 +120,7 @@ fun SplashScreen(
                     .scale(logoScale)
                     .size(100.dp)
                     .background(
-                        color = KnowItAllColors.NearBlack.copy(alpha = logoAlpha),
+                        color = NearBlack.copy(alpha = logoAlpha),
                         shape = RoundedCornerShape(24.dp)
                     ),
                 contentAlignment = Alignment.Center
@@ -119,7 +129,7 @@ fun SplashScreen(
                     text = "K",
                     fontSize = 56.sp,
                     fontWeight = FontWeight.Black,
-                    color = KnowItAllColors.AcidGreen
+                    color = AcidGreen
                 )
                 // Online dot — top right
                 Box(
@@ -127,7 +137,7 @@ fun SplashScreen(
                         .align(Alignment.TopEnd)
                         .padding(10.dp)
                         .size(12.dp)
-                        .background(KnowItAllColors.AcidGreen, CircleShape)
+                        .background(AcidGreen, CircleShape)
                 )
             }
 
@@ -138,7 +148,7 @@ fun SplashScreen(
                 text = "KnowItAll",
                 fontSize = 44.sp,
                 fontWeight = FontWeight.Black,
-                color = KnowItAllColors.NearBlack.copy(alpha = textAlpha),
+                color = NearBlack.copy(alpha = textAlpha),
                 letterSpacing = (-2).sp,
                 textAlign = TextAlign.Center
             )
@@ -149,7 +159,7 @@ fun SplashScreen(
                 text = "Bridging the Knowledge Gap,\nOne Trade at a Time.",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Normal,
-                color = KnowItAllColors.CharcoalGray.copy(alpha = textAlpha),
+                color = CharcoalGray.copy(alpha = textAlpha),
                 textAlign = TextAlign.Center,
                 lineHeight = 22.sp
             )
@@ -193,7 +203,7 @@ private fun PulsingDot() {
                 .scale(scale)
                 .size(10.dp)
                 .background(
-                    KnowItAllColors.AcidGreen.copy(alpha = alpha),
+                    AcidGreen.copy(alpha = alpha),
                     CircleShape
                 )
         )
@@ -202,7 +212,7 @@ private fun PulsingDot() {
             text = "Loading",
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
-            color = KnowItAllColors.WarmGray,
+            color = WarmGray,
             letterSpacing = 1.sp
         )
     }

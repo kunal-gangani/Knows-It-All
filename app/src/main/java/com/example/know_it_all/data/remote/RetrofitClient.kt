@@ -1,6 +1,5 @@
 package com.example.know_it_all.data.remote
 
-import com.example.know_it_all.BuildConfig
 import com.example.know_it_all.data.remote.api.LedgerService
 import com.example.know_it_all.data.remote.api.SkillService
 import com.example.know_it_all.data.remote.api.SwapService
@@ -12,41 +11,32 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 /**
- * Fixes applied:
- *  1. httpClient and retrofit use `by lazy` — built once, reused.
- *     The original `get()` bodies rebuilt OkHttpClient (thread pools,
- *     connection pools) on every property access — a resource leak.
- *  2. Logging gated on BuildConfig.DEBUG — no body logging in release.
- *  3. BASE_URL from BuildConfig.BASE_URL — add this to build.gradle.kts:
- *
- *       android {
- *         buildFeatures { buildConfig = true }
- *         defaultConfig {
- *           buildConfigField("String", "BASE_URL", "\"http://192.168.0.107:8080/api/v1/\"")
- *         }
- *         buildTypes {
- *           release {
- *             buildConfigField("String", "BASE_URL", "\"https://api.knowitall.app/api/v1/\"")
- *           }
- *         }
+ * Safe version that doesn't require BuildConfig.
+ * 
+ * To use environment-specific URLs later, add to build.gradle.kts:
+ *   android {
+ *     buildFeatures { buildConfig = true }
+ *     defaultConfig {
+ *       buildConfigField("String", "BASE_URL", "\"http://192.168.0.107:8080/api/v1/\"")
+ *     }
+ *     buildTypes {
+ *       release {
+ *         buildConfigField("String", "BASE_URL", "\"https://api.knowitall.app/api/v1/\"")
  *       }
- *
- *  4. Service instances exposed as `val` properties (lazy) — no
- *     createXxxService() factory methods that each call retrofit.create()
- *     unnecessarily on every invocation.
- *
- *  5. THERE MUST BE ONLY ONE RetrofitClient in the project. The copy
- *     that was pasted into presentation/ui/navigation/Navigation.kt
- *     must be deleted — it causes a "Redeclaration" compile error.
+ *     }
+ *   }
+ * Then replace BASE_URL below with BuildConfig.BASE_URL
+ * and add: import com.example.know_it_all.BuildConfig
  */
 object RetrofitClient {
 
+    // ✅ Hardcoded for now — replace with BuildConfig.BASE_URL once
+    // buildConfig = true is added to build.gradle.kts
+    private const val BASE_URL = "http://192.168.0.107:8080/api/v1/"
+
     private val loggingInterceptor: HttpLoggingInterceptor by lazy {
         HttpLoggingInterceptor().apply {
-            level = if (BuildConfig.DEBUG)
-                HttpLoggingInterceptor.Level.BODY
-            else
-                HttpLoggingInterceptor.Level.NONE
+            level = HttpLoggingInterceptor.Level.BODY   // change to NONE for release
         }
     }
 
@@ -61,7 +51,7 @@ object RetrofitClient {
 
     private val retrofit: Retrofit by lazy {
         Retrofit.Builder()
-            .baseUrl(BuildConfig.BASE_URL)
+            .baseUrl(BASE_URL)
             .client(httpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

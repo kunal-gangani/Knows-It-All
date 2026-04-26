@@ -1,4 +1,15 @@
 package com.example.know_it_all.presentation.ui.screen.auth
+import com.example.know_it_all.ui.theme.AcidGreen
+import com.example.know_it_all.ui.theme.AcidGreenDark
+import com.example.know_it_all.ui.theme.Cream
+import com.example.know_it_all.ui.theme.CreamDark
+import com.example.know_it_all.ui.theme.CreamDeep
+import com.example.know_it_all.ui.theme.NearBlack
+import com.example.know_it_all.ui.theme.CharcoalGray
+import com.example.know_it_all.ui.theme.WarmGray
+import com.example.know_it_all.ui.theme.Ochre
+import com.example.know_it_all.ui.theme.ErrorRed
+import com.example.know_it_all.ui.theme.ErrorContainerColor
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -51,7 +62,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.know_it_all.presentation.ui.navigation.Screen
-import com.example.know_it_all.ui.theme.KnowItAllColors
 import com.example.know_it_all.presentation.viewmodel.AuthViewModel
 
 private fun nameError(name: String) = when {
@@ -107,7 +117,7 @@ fun RegisterScreen(
         if (authState.isAuthenticated) {
             authViewModel.clearError()
             navController.navigate(Screen.Radar.route) {
-                popUpTo(0) { isInclusive = true }
+                popUpTo(0) { inclusive = true }
             }
         }
     }
@@ -123,7 +133,7 @@ fun RegisterScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(KnowItAllColors.Cream)
+            .background(Cream)
     ) {
         Column(
             modifier = Modifier
@@ -138,11 +148,11 @@ fun RegisterScreen(
             Box(
                 modifier = Modifier
                     .size(52.dp)
-                    .background(KnowItAllColors.NearBlack, RoundedCornerShape(14.dp)),
+                    .background(NearBlack, RoundedCornerShape(14.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Text("+", fontSize = 28.sp, fontWeight = FontWeight.Black,
-                    color = KnowItAllColors.AcidGreen)
+                    color = AcidGreen)
             }
 
             Spacer(modifier = Modifier.height(28.dp))
@@ -151,7 +161,7 @@ fun RegisterScreen(
                 text = "Join\nKnowItAll.",
                 fontSize = 42.sp,
                 fontWeight = FontWeight.Black,
-                color = KnowItAllColors.NearBlack,
+                color = NearBlack,
                 lineHeight = 46.sp,
                 letterSpacing = (-1.5).sp
             )
@@ -159,7 +169,7 @@ fun RegisterScreen(
             Text(
                 text = "Start sharing your skills today.",
                 fontSize = 15.sp,
-                color = KnowItAllColors.CharcoalGray
+                color = CharcoalGray
             )
 
             Spacer(modifier = Modifier.height(40.dp))
@@ -215,7 +225,7 @@ fun RegisterScreen(
                             if (passwordVisible) Icons.Filled.Visibility
                             else Icons.Filled.VisibilityOff,
                             contentDescription = null,
-                            tint = KnowItAllColors.WarmGray,
+                            tint = WarmGray,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -247,7 +257,7 @@ fun RegisterScreen(
                             if (confirmPasswordVisible) Icons.Filled.Visibility
                             else Icons.Filled.VisibilityOff,
                             contentDescription = null,
-                            tint = KnowItAllColors.WarmGray,
+                            tint = WarmGray,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -277,12 +287,12 @@ fun RegisterScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(KnowItAllColors.ErrorContainer, RoundedCornerShape(10.dp))
-                            .border(1.dp, KnowItAllColors.ErrorRed.copy(alpha = 0.3f),
+                            .background(ErrorContainerColor, RoundedCornerShape(10.dp))
+                            .border(1.dp, ErrorRed.copy(alpha = 0.3f),
                                 RoundedCornerShape(10.dp))
                             .padding(14.dp)
                     ) {
-                        Text(err, fontSize = 13.sp, color = KnowItAllColors.ErrorRed)
+                        Text(err, fontSize = 13.sp, color = ErrorRed)
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                 }
@@ -302,16 +312,16 @@ fun RegisterScreen(
                     .height(54.dp),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = KnowItAllColors.AcidGreen,
-                    contentColor = KnowItAllColors.NearBlack,
-                    disabledContainerColor = KnowItAllColors.AcidGreen.copy(alpha = 0.4f),
-                    disabledContentColor = KnowItAllColors.NearBlack.copy(alpha = 0.4f)
+                    containerColor = AcidGreen,
+                    contentColor = NearBlack,
+                    disabledContainerColor = AcidGreen.copy(alpha = 0.4f),
+                    disabledContentColor = NearBlack.copy(alpha = 0.4f)
                 )
             ) {
                 if (authState.isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
-                        color = KnowItAllColors.NearBlack,
+                        color = NearBlack,
                         strokeWidth = 2.dp
                     )
                 } else {
@@ -327,13 +337,13 @@ fun RegisterScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("Already have an account?", fontSize = 13.sp,
-                    color = KnowItAllColors.CharcoalGray)
+                    color = CharcoalGray)
                 TextButton(
                     onClick = { navController.popBackStack() },
                     enabled = !authState.isLoading
                 ) {
                     Text("Sign in", fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
-                        color = KnowItAllColors.NearBlack)
+                        color = NearBlack)
                 }
             }
 

@@ -1,4 +1,15 @@
 package com.example.know_it_all.presentation.ui.screen.main
+import com.example.know_it_all.ui.theme.AcidGreen
+import com.example.know_it_all.ui.theme.AcidGreenDark
+import com.example.know_it_all.ui.theme.Cream
+import com.example.know_it_all.ui.theme.CreamDark
+import com.example.know_it_all.ui.theme.CreamDeep
+import com.example.know_it_all.ui.theme.NearBlack
+import com.example.know_it_all.ui.theme.CharcoalGray
+import com.example.know_it_all.ui.theme.WarmGray
+import com.example.know_it_all.ui.theme.Ochre
+import com.example.know_it_all.ui.theme.ErrorRed
+import com.example.know_it_all.ui.theme.ErrorContainerColor
 
 import android.Manifest
 import androidx.compose.animation.AnimatedVisibility
@@ -56,7 +67,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.know_it_all.data.model.User
 import com.example.know_it_all.presentation.ui.components.BottomNavigationBar
-import com.example.know_it_all.ui.theme.KnowItAllColors
 import com.example.know_it_all.presentation.viewmodel.RadarViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -101,12 +111,12 @@ fun RadarScreenEnhanced(
 
     LaunchedEffect(locationPermissionState.status.isGranted) {
         if (locationPermissionState.status.isGranted) {
-            radarViewModel.refreshLocationAndLoad(context)   
+            radarViewModel.loadNearbyUsers()   // ✅ no token param — read internally
         }
     }
 
     Scaffold(
-        containerColor = KnowItAllColors.Cream,
+        containerColor = Cream,
         bottomBar = {
             BottomNavigationBar(
                 navController = navController,
@@ -122,19 +132,19 @@ fun RadarScreenEnhanced(
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold,
                             letterSpacing = 2.sp,
-                            color = KnowItAllColors.WarmGray
+                            color = WarmGray
                         )
                         Text(
                             text = "Nearby mentors",
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Black,
-                            color = KnowItAllColors.NearBlack,
+                            color = NearBlack,
                             letterSpacing = (-0.5).sp
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = KnowItAllColors.Cream
+                    containerColor = Cream
                 ),
                 actions = {
                     // Online filter toggle
@@ -143,8 +153,8 @@ fun RadarScreenEnhanced(
                             modifier = Modifier
                                 .size(36.dp)
                                 .background(
-                                    if (radarState.onlineOnly) KnowItAllColors.AcidGreen
-                                    else KnowItAllColors.CreamDark,
+                                    if (radarState.onlineOnly) AcidGreen
+                                    else CreamDark,
                                     RoundedCornerShape(10.dp)
                                 ),
                             contentAlignment = Alignment.Center
@@ -153,8 +163,8 @@ fun RadarScreenEnhanced(
                                 modifier = Modifier
                                     .size(10.dp)
                                     .background(
-                                        if (radarState.onlineOnly) KnowItAllColors.NearBlack
-                                        else KnowItAllColors.WarmGray,
+                                        if (radarState.onlineOnly) NearBlack
+                                        else WarmGray,
                                         CircleShape
                                     )
                             )
@@ -164,7 +174,7 @@ fun RadarScreenEnhanced(
                         Icon(
                             Icons.Default.Refresh,
                             contentDescription = "Refresh",
-                            tint = KnowItAllColors.NearBlack,
+                            tint = NearBlack,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -175,7 +185,7 @@ fun RadarScreenEnhanced(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(KnowItAllColors.Cream)
+                .background(Cream)
                 .padding(innerPadding)
         ) {
             if (!locationPermissionState.status.isGranted) {
@@ -264,7 +274,7 @@ private fun MentorProfileCard(
             .fillMaxWidth()
             .height(220.dp)
             .clip(RoundedCornerShape(20.dp))
-            .background(KnowItAllColors.NearBlack)
+            .background(NearBlack)
             .clickable(onClick = onConnect)
     ) {
         // Placeholder avatar background (replace with AsyncImage + Coil in production)
@@ -274,8 +284,8 @@ private fun MentorProfileCard(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            KnowItAllColors.CharcoalGray,
-                            KnowItAllColors.NearBlack
+                            CharcoalGray,
+                            NearBlack
                         )
                     )
                 )
@@ -290,8 +300,8 @@ private fun MentorProfileCard(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            KnowItAllColors.NearBlack.copy(alpha = 0f),
-                            KnowItAllColors.NearBlack.copy(alpha = 0.92f)
+                            NearBlack.copy(alpha = 0f),
+                            NearBlack.copy(alpha = 0.92f)
                         )
                     )
                 )
@@ -334,14 +344,14 @@ private fun MentorProfileCard(
                 text = user.name,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Black,
-                color = KnowItAllColors.Cream,
+                color = Cream,
                 letterSpacing = (-0.5).sp
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = "${user.skillTokenBalance} tokens · ${String.format("%.1f", distanceKm)} km away",
                 fontSize = 12.sp,
-                color = KnowItAllColors.Cream.copy(alpha = 0.65f)
+                color = Cream.copy(alpha = 0.65f)
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -356,7 +366,7 @@ private fun MentorProfileCard(
                 Box(
                     modifier = Modifier
                         .background(
-                            KnowItAllColors.Cream.copy(alpha = 0.15f),
+                            Cream.copy(alpha = 0.15f),
                             RoundedCornerShape(8.dp)
                         )
                         .padding(horizontal = 14.dp, vertical = 7.dp)
@@ -365,7 +375,7 @@ private fun MentorProfileCard(
                         text = "About",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
-                        color = KnowItAllColors.Cream
+                        color = Cream
                     )
                 }
 
@@ -374,8 +384,8 @@ private fun MentorProfileCard(
                     onClick = onConnect,
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = KnowItAllColors.AcidGreen,
-                        contentColor = KnowItAllColors.NearBlack
+                        containerColor = AcidGreen,
+                        contentColor = NearBlack
                     ),
                     modifier = Modifier.height(36.dp)
                 ) {
@@ -411,12 +421,12 @@ private fun PulsingOnlineDot(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .scale(scale)
                 .size(14.dp)
-                .background(KnowItAllColors.AcidGreen.copy(alpha = 0.3f), CircleShape)
+                .background(AcidGreen.copy(alpha = 0.3f), CircleShape)
         )
         Box(
             modifier = Modifier
                 .size(9.dp)
-                .background(KnowItAllColors.AcidGreen, CircleShape)
+                .background(AcidGreen, CircleShape)
         )
     }
 }
@@ -426,14 +436,14 @@ private fun SkillChip(label: String, isAccent: Boolean = false) {
     Box(
         modifier = Modifier
             .background(
-                if (isAccent) KnowItAllColors.AcidGreen
-                else KnowItAllColors.Cream.copy(alpha = 0.18f),
+                if (isAccent) AcidGreen
+                else Cream.copy(alpha = 0.18f),
                 RoundedCornerShape(8.dp)
             )
             .border(
                 1.dp,
-                if (isAccent) KnowItAllColors.AcidGreen
-                else KnowItAllColors.Cream.copy(alpha = 0.25f),
+                if (isAccent) AcidGreen
+                else Cream.copy(alpha = 0.25f),
                 RoundedCornerShape(8.dp)
             )
             .padding(horizontal = 10.dp, vertical = 5.dp)
@@ -442,7 +452,7 @@ private fun SkillChip(label: String, isAccent: Boolean = false) {
             text = label,
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
-            color = if (isAccent) KnowItAllColors.NearBlack else KnowItAllColors.Cream
+            color = if (isAccent) NearBlack else Cream
         )
     }
 }
@@ -452,7 +462,7 @@ private fun RadarStatsStrip(count: Int, radiusKm: Double, isLoading: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(KnowItAllColors.CreamDark, RoundedCornerShape(14.dp))
+            .background(CreamDark, RoundedCornerShape(14.dp))
             .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -462,19 +472,19 @@ private fun RadarStatsStrip(count: Int, radiusKm: Double, isLoading: Boolean) {
                 text = if (isLoading) "Scanning..." else "$count people found",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                color = KnowItAllColors.NearBlack
+                color = NearBlack
             )
             Text(
                 text = "Within ${radiusKm}km radius",
                 fontSize = 12.sp,
-                color = KnowItAllColors.CharcoalGray
+                color = CharcoalGray
             )
         }
         Box(
             modifier = Modifier
                 .size(8.dp)
                 .background(
-                    if (isLoading) KnowItAllColors.Ochre else KnowItAllColors.AcidGreen,
+                    if (isLoading) Ochre else AcidGreen,
                     CircleShape
                 )
         )
@@ -496,14 +506,14 @@ private fun LocationPermissionPrompt(onRequest: () -> Unit) {
             text = "Enable Location",
             fontSize = 26.sp,
             fontWeight = FontWeight.Black,
-            color = KnowItAllColors.NearBlack,
+            color = NearBlack,
             letterSpacing = (-0.5).sp
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "We need your location to find\nnearby mentors and skills.",
             fontSize = 14.sp,
-            color = KnowItAllColors.CharcoalGray,
+            color = CharcoalGray,
             lineHeight = 21.sp
         )
         Spacer(modifier = Modifier.height(32.dp))
@@ -514,8 +524,8 @@ private fun LocationPermissionPrompt(onRequest: () -> Unit) {
                 .height(52.dp),
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = KnowItAllColors.AcidGreen,
-                contentColor = KnowItAllColors.NearBlack
+                containerColor = AcidGreen,
+                contentColor = NearBlack
             )
         ) {
             Text("Grant Permission", fontWeight = FontWeight.Bold)
@@ -537,13 +547,13 @@ private fun RadarEmptyState() {
             text = "No mentors nearby",
             fontSize = 20.sp,
             fontWeight = FontWeight.Black,
-            color = KnowItAllColors.NearBlack
+            color = NearBlack
         )
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = "Try increasing the radius\nor check back later",
             fontSize = 13.sp,
-            color = KnowItAllColors.CharcoalGray,
+            color = CharcoalGray,
             lineHeight = 20.sp
         )
     }
@@ -554,25 +564,25 @@ private fun ErrorCard(message: String, onRetry: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(KnowItAllColors.ErrorContainer, RoundedCornerShape(14.dp))
-            .border(1.dp, KnowItAllColors.ErrorRed.copy(alpha = 0.25f), RoundedCornerShape(14.dp))
+            .background(ErrorContainerColor, RoundedCornerShape(14.dp))
+            .border(1.dp, ErrorRed.copy(alpha = 0.25f), RoundedCornerShape(14.dp))
             .padding(16.dp)
     ) {
         Text(
             text = "Couldn't load mentors",
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
-            color = KnowItAllColors.ErrorRed
+            color = ErrorRed
         )
         Spacer(modifier = Modifier.height(4.dp))
-        Text(message, fontSize = 12.sp, color = KnowItAllColors.CharcoalGray)
+        Text(message, fontSize = 12.sp, color = CharcoalGray)
         Spacer(modifier = Modifier.height(10.dp))
         Button(
             onClick = onRetry,
             shape = RoundedCornerShape(10.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = KnowItAllColors.NearBlack,
-                contentColor = KnowItAllColors.Cream
+                containerColor = NearBlack,
+                contentColor = Cream
             )
         ) {
             Text("Retry", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)

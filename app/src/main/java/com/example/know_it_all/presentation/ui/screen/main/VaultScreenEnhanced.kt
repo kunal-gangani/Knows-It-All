@@ -1,4 +1,15 @@
 package com.example.know_it_all.presentation.ui.screen.main
+import com.example.know_it_all.ui.theme.AcidGreen
+import com.example.know_it_all.ui.theme.AcidGreenDark
+import com.example.know_it_all.ui.theme.Cream
+import com.example.know_it_all.ui.theme.CreamDark
+import com.example.know_it_all.ui.theme.CreamDeep
+import com.example.know_it_all.ui.theme.NearBlack
+import com.example.know_it_all.ui.theme.CharcoalGray
+import com.example.know_it_all.ui.theme.WarmGray
+import com.example.know_it_all.ui.theme.Ochre
+import com.example.know_it_all.ui.theme.ErrorRed
+import com.example.know_it_all.ui.theme.ErrorContainerColor
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -46,7 +57,6 @@ import androidx.navigation.NavHostController
 import com.example.know_it_all.data.model.LedgerStatus
 import com.example.know_it_all.data.model.TrustLedger
 import com.example.know_it_all.presentation.ui.components.BottomNavigationBar
-import com.example.know_it_all.ui.theme.KnowItAllColors
 import com.example.know_it_all.presentation.viewmodel.LedgerViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -104,7 +114,7 @@ fun VaultScreenEnhanced(
     }
 
     Scaffold(
-        containerColor = KnowItAllColors.Cream,
+        containerColor = Cream,
         bottomBar = {  // ✅ was missing entirely
             BottomNavigationBar(
                 navController = navController,
@@ -120,19 +130,19 @@ fun VaultScreenEnhanced(
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold,
                             letterSpacing = 2.sp,
-                            color = KnowItAllColors.WarmGray
+                            color = WarmGray
                         )
                         Text(
                             text = "Tokens & Ledger",
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Black,
-                            color = KnowItAllColors.NearBlack,
+                            color = NearBlack,
                             letterSpacing = (-0.5).sp
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = KnowItAllColors.Cream
+                    containerColor = Cream
                 )
             )
         }
@@ -140,7 +150,7 @@ fun VaultScreenEnhanced(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(KnowItAllColors.Cream)
+                .background(Cream)
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -175,16 +185,16 @@ fun VaultScreenEnhanced(
                         .height(52.dp),
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = KnowItAllColors.NearBlack,
-                        contentColor = KnowItAllColors.AcidGreen,
-                        disabledContainerColor = KnowItAllColors.CreamDark,
-                        disabledContentColor = KnowItAllColors.WarmGray
+                        containerColor = NearBlack,
+                        contentColor = AcidGreen,
+                        disabledContainerColor = CreamDark,
+                        disabledContentColor = WarmGray
                     )
                 ) {
                     if (ledgerState.isGeneratingPassport) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(18.dp),
-                            color = KnowItAllColors.AcidGreen,
+                            color = AcidGreen,
                             strokeWidth = 2.dp
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -210,12 +220,12 @@ fun VaultScreenEnhanced(
                         text = "Transactions",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Black,
-                        color = KnowItAllColors.NearBlack
+                        color = NearBlack
                     )
                     Text(
                         text = "${ledgerState.ledgerEntries.size} records",
                         fontSize = 12.sp,
-                        color = KnowItAllColors.CharcoalGray
+                        color = CharcoalGray
                     )
                 }
             }
@@ -230,7 +240,7 @@ fun VaultScreenEnhanced(
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(
-                            color = KnowItAllColors.NearBlack,
+                            color = NearBlack,
                             strokeWidth = 2.dp,
                             modifier = Modifier.size(28.dp)
                         )
@@ -244,10 +254,10 @@ fun VaultScreenEnhanced(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(KnowItAllColors.ErrorContainer, RoundedCornerShape(12.dp))
+                            .background(ErrorContainerColor, RoundedCornerShape(12.dp))
                             .padding(14.dp)
                     ) {
-                        Text(err, fontSize = 13.sp, color = KnowItAllColors.ErrorRed)
+                        Text(err, fontSize = 13.sp, color = ErrorRed)
                     }
                 }
             }
@@ -290,7 +300,7 @@ private fun TokenBalanceCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(KnowItAllColors.NearBlack, RoundedCornerShape(20.dp))
+            .background(NearBlack, RoundedCornerShape(20.dp))
             .padding(22.dp)
     ) {
         Column {
@@ -299,7 +309,7 @@ private fun TokenBalanceCard(
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = 2.sp,
-                color = KnowItAllColors.WarmGray
+                color = WarmGray
             )
             Spacer(modifier = Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.Bottom) {
@@ -307,7 +317,7 @@ private fun TokenBalanceCard(
                     text = "$balance",
                     fontSize = 52.sp,
                     fontWeight = FontWeight.Black,
-                    color = KnowItAllColors.AcidGreen,
+                    color = AcidGreen,
                     letterSpacing = (-2).sp
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -315,7 +325,7 @@ private fun TokenBalanceCard(
                     text = "SKT",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
-                    color = KnowItAllColors.WarmGray,
+                    color = WarmGray,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
@@ -352,14 +362,14 @@ private fun TokenBalanceCard(
 private fun StatPill(label: String, value: String, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(KnowItAllColors.Cream.copy(alpha = 0.08f), RoundedCornerShape(10.dp))
+            .background(Cream.copy(alpha = 0.08f), RoundedCornerShape(10.dp))
             .padding(horizontal = 10.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(value, fontSize = 15.sp, fontWeight = FontWeight.Bold,
-            color = KnowItAllColors.Cream)
+            color = Cream)
         Text(label, fontSize = 9.sp, fontWeight = FontWeight.Medium,
-            color = KnowItAllColors.WarmGray, letterSpacing = 1.sp)
+            color = WarmGray, letterSpacing = 1.sp)
     }
 }
 
@@ -370,9 +380,9 @@ private fun StatPill(label: String, value: String, modifier: Modifier = Modifier
 @Composable
 private fun LedgerEntryCard(entry: TrustLedger) {
     val statusColor = when (entry.status) {
-        LedgerStatus.COMPLETED -> KnowItAllColors.AcidGreen
-        LedgerStatus.DISPUTED  -> KnowItAllColors.ErrorRed
-        LedgerStatus.RESOLVED  -> KnowItAllColors.Ochre
+        LedgerStatus.COMPLETED -> AcidGreen
+        LedgerStatus.DISPUTED  -> ErrorRed
+        LedgerStatus.RESOLVED  -> Ochre
     }
 
     val dateStr = remember(entry.createdAt) {
@@ -395,7 +405,7 @@ private fun LedgerEntryCard(entry: TrustLedger) {
                 modifier = Modifier
                     .width(2.dp)
                     .height(72.dp)
-                    .background(KnowItAllColors.CreamDeep)
+                    .background(CreamDeep)
             )
         }
 
@@ -403,7 +413,7 @@ private fun LedgerEntryCard(entry: TrustLedger) {
         Column(
             modifier = Modifier
                 .weight(1f)
-                .background(KnowItAllColors.CreamDark, RoundedCornerShape(14.dp))
+                .background(CreamDark, RoundedCornerShape(14.dp))
                 .padding(14.dp)
         ) {
             Row(
@@ -414,27 +424,27 @@ private fun LedgerEntryCard(entry: TrustLedger) {
                     text = entry.skillName,                          // ✅ skillName, not transactionData
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = KnowItAllColors.NearBlack
+                    color = NearBlack
                 )
                 Text(
                     text = "★ ${entry.ratingGiven}",                 // ✅ Int star rating
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = KnowItAllColors.Ochre
+                    color = Ochre
                 )
             }
             Spacer(modifier = Modifier.height(3.dp))
             Text(
                 text = dateStr,
                 fontSize = 11.sp,
-                color = KnowItAllColors.CharcoalGray
+                color = CharcoalGray
             )
             if (entry.ratingComment.isNotBlank()) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "\"${entry.ratingComment}\"",
                     fontSize = 11.sp,
-                    color = KnowItAllColors.CharcoalGray,
+                    color = CharcoalGray,
                     fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                 )
             }
@@ -443,7 +453,7 @@ private fun LedgerEntryCard(entry: TrustLedger) {
             Text(
                 text = entry.currentHash.take(16) + "...",
                 fontSize = 9.sp,
-                color = KnowItAllColors.WarmGray,
+                color = WarmGray,
                 fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
                 letterSpacing = 0.5.sp
             )
@@ -465,13 +475,13 @@ private fun LedgerEmptyState() {
             text = "No transactions yet",
             fontSize = 20.sp,
             fontWeight = FontWeight.Black,
-            color = KnowItAllColors.NearBlack
+            color = NearBlack
         )
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = "Complete a swap to see\nyour ledger history here",
             fontSize = 13.sp,
-            color = KnowItAllColors.CharcoalGray,
+            color = CharcoalGray,
             lineHeight = 20.sp
         )
     }

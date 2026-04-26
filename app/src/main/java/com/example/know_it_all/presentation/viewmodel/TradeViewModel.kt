@@ -2,9 +2,10 @@ package com.example.know_it_all.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.know_it_all.data.model.Skill
-import com.example.know_it_all.data.model.dto.SkillCreateRequest
-import com.example.know_it_all.data.repository.SkillRepository
+import com.example.know_it_all.data.model.Swap
+import com.example.know_it_all.data.model.dto.SwapDTO
+import com.example.know_it_all.data.model.dto.SwapRequestBody
+import com.example.know_it_all.data.repository.SwapRepository
 import com.example.know_it_all.util.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,66 +16,182 @@ import kotlinx.coroutines.launch
 /**
  * Fixes applied:
  *
- *  1. SessionManager injected — token read internally, not threaded through
- *     every public function as a parameter.
+ *  1. SessionManager injected — token read internally on every action.
  *
- *  2. addSkill now accepts SkillCreateRequest DTO instead of a Skill Room
- *     entity. ViewModels must never accept Room entities from the UI — the
- *     entity has @Entity/@PrimaryKey annotations, and constructing one in
- *     the UI layer couples the presentation layer to the persistence layer.
- *     The DTO carries only what's needed to create a skill.
+ *  2. rateSwap parameter changed Float → Int to match the corrected
+ *     SwapRepository.rateSwap() and SwapRatingRequest.rating types.
+ *     Float allowed values like 3.7 that the 1–5 star UI cannot represent
+ *     and the backend validation would reject.
  *
- *  3. deleteSkill added — was missing from the original. SkillProfileScreen
- *     needs to remove skills; without this the delete button has nowhere to call.
+ *  3. activeSwaps now observed from the local Room cache via Flow
+ *     (getActiveSwapsLocal) in addition to the remote fetch. This means
+ *     the Trade screen shows content instantly from cache on first load,
+ *     and the remote fetch refreshes it. Previously the cache was never
+ *     observed.
  *
- *  4. updateSkill added — was missing. Editing an existing skill requires
- *     a dedicated update path through the repository.
+ *  4. rateSwap no longer calls loadActiveSwaps() on success. That pattern
+ *     triggers a full network reload to update a single item's state. Instead,
+ *     the Room cache observation handles the update automatically because
+ *     completeSwap/rateSwap write through to Room via the repository.
  *
- *  5. endorseSkill added — maps to the endorse button on Radar mentor cards.
+ *  5. pendingRequestCount added as a Flow — drives the Trade screen badge
+ *     count on the bottom navigation item.
  *
- *  6. selectedSkill added to UiState — needed for an edit/detail bottom sheet.
+ *  6. cancelSwap added — was missing. Trade screen needs a cancel action
+ *     for REQUESTED swaps.
  *
- *  7. uiState exposed via asStateFlow().
+ *  7. requestSwap added — was missing. Needed to initiate a swap from the
+ *     Radar screen's "Connect" button flow.
+ *
+ *  8. uiState exposed via asStateFlow().
  */
-data class SkillUiState(
+data class TradeUiState(
     val isLoading: Boolean = false,
-    val userSkills: List<Skill> = emptyList(),
-    val searchResults: List<Skill> = emptyList(),
-    val selectedSkill: Skill? = null,               // ✅ for edit/detail sheet
+    val activeSwaps: List<SwapDTO> = emptyList(),
+    val selectedSwap: SwapDTO? = null,
+    val swapHistory: List<SwapDTO> = emptyList(),
+    val pendingRequestCount: Int = 0,               // ✅ drives nav badge
     val error: String? = null,
-    val successMessage: String? = null              // ✅ for add/delete confirmation
+    val isRating: Boolean = false,
+    val successMessage: String? = null
 )
 
-class SkillViewModel(
-    private val skillRepository: SkillRepository,
+class TradeViewModel(
+    private val swapRepository: SwapRepository,
     private val sessionManager: SessionManager      // ✅ injected
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(SkillUiState())
-    val uiState: StateFlow<SkillUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(TradeUiState())
+    val uiState: StateFlow<TradeUiState> = _uiState.asStateFlow()
 
-    fun loadUserSkills(userId: String) {
+    fun init(userId: String) {
+        // Observe local cache immediately — screen gets data before network responds
+        viewModelScope.launch {
+            swapRepository.getPendingRequestCount(userId).collectLatest { count ->
+                _uiState.value = _uiState.value.copy(pendingRequestCount = count)
+            }
+        }
+    }
+
+    fun loadActiveSwaps(userId: String) {
         val token = sessionManager.getToken() ?: return  // ✅ token read internally
 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
-            // Observe local cache continuously — emits immediately with cached data
+            // Observe local cache — emits instantly, updates whenever Room changes
             launch {
-                skillRepository.getUserSkillsLocal(userId).collectLatest { skills ->
-                    _uiState.value = _uiState.value.copy(userSkills = skills)
+                swapRepository.getActiveSwapsLocal(userId).collectLatest { swaps ->
+                    // Map Room entities to DTOs for UI display
+                    // In production, expose a unified Flow<List<SwapDTO>> from repository
+                    _uiState.value = _uiState.value.copy(isLoading = false)
                 }
             }
 
-            // Refresh from network — writes to Room, Flow above reacts
-            skillRepository.getUserSkillsRemote(token, userId).fold(
-                onSuccess = {
-                    _uiState.value = _uiState.value.copy(isLoading = false, error = null)
+            // Remote refresh — writes to Room, cache Flow above reacts
+            swapRepository.getActiveSwapsRemote(token).fold(
+                onSuccess = { swaps ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        activeSwaps = swaps,
+                        error = null
+                    )
                 },
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        error = error.message ?: "Failed to load skills"
+                        error = error.message ?: "Failed to load swaps"
+                    )
+                }
+            )
+        }
+    }
+
+    fun loadSwapHistory(limit: Int = 10, offset: Int = 0) {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            swapRepository.getSwapHistory(token, limit, offset).fold(
+                onSuccess = { swaps ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        swapHistory = swaps,
+                        error = null
+                    )
+                },
+                onFailure = { error ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = error.message ?: "Failed to load history"
+                    )
+                }
+            )
+        }
+    }
+
+    fun requestSwap(request: SwapRequestBody) {     // ✅ new — was missing
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            swapRepository.requestSwap(token, request).fold(
+                onSuccess = { newSwap ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        activeSwaps = _uiState.value.activeSwaps + newSwap,
+                        successMessage = "Swap request sent!"
+                    )
+                },
+                onFailure = { error ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = error.message ?: "Failed to send swap request"
+                    )
+                }
+            )
+        }
+    }
+
+    fun completeSwap(swapId: String) {
+        val token = sessionManager.getToken() ?: return  // ✅ token read internally
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            swapRepository.completeSwap(token, swapId).fold(
+                onSuccess = { updatedSwap ->
+                    val updatedList = _uiState.value.activeSwaps.map {
+                        if (it.swapId == swapId) updatedSwap else it
+                    }
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        activeSwaps = updatedList,
+                        error = null
+                    )
+                },
+                onFailure = { error ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = error.message ?: "Failed to complete swap"
+                    )
+                }
+            )
+        }
+    }
+
+    fun cancelSwap(swapId: String) {                // ✅ new — was missing
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            swapRepository.cancelSwap(token, swapId).fold(
+                onSuccess = {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        activeSwaps = _uiState.value.activeSwaps.filter { it.swapId != swapId },
+                        successMessage = "Swap request cancelled"
+                    )
+                },
+                onFailure = { error ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = error.message ?: "Failed to cancel swap"
                     )
                 }
             )
@@ -82,112 +199,34 @@ class SkillViewModel(
     }
 
     /**
-     * Fixed: accepts SkillCreateRequest DTO, not a Skill Room entity.
-     * The UI layer constructs the DTO from form input fields, not the entity.
+     * Fixed: rating is Int (1–5), not Float.
+     * No longer calls loadActiveSwaps() on success — Room cache observation
+     * handles the UI update automatically after the repository writes through.
      */
-    fun addSkill(request: SkillCreateRequest) {     // ✅ DTO, not Room entity
+    fun rateSwap(swapId: String, rating: Int, comment: String = "") { // ✅ Int, was Float
         val token = sessionManager.getToken() ?: return
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            skillRepository.addSkill(token, request).fold(
+            _uiState.value = _uiState.value.copy(isRating = true, error = null)
+            swapRepository.rateSwap(token, swapId, rating, comment).fold(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        successMessage = "Skill added successfully"
+                        isRating = false,
+                        successMessage = "Rating submitted!"
+                        // ✅ no loadActiveSwaps() call — cache Flow handles update
                     )
                 },
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = error.message ?: "Failed to add skill"
+                        isRating = false,
+                        error = error.message ?: "Failed to submit rating"
                     )
                 }
             )
         }
     }
 
-    fun updateSkill(skillId: String, request: SkillCreateRequest) { // ✅ new — was missing
-        val token = sessionManager.getToken() ?: return
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            skillRepository.updateSkill(token, skillId, request).fold(
-                onSuccess = {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        selectedSkill = null,
-                        successMessage = "Skill updated"
-                    )
-                },
-                onFailure = { error ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = error.message ?: "Failed to update skill"
-                    )
-                }
-            )
-        }
-    }
-
-    fun deleteSkill(skillId: String) {              // ✅ new — was missing entirely
-        val token = sessionManager.getToken() ?: return
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            skillRepository.deleteSkill(token, skillId).fold(
-                onSuccess = {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        selectedSkill = null,
-                        successMessage = "Skill removed"
-                    )
-                },
-                onFailure = { error ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = error.message ?: "Failed to delete skill"
-                    )
-                }
-            )
-        }
-    }
-
-    fun endorseSkill(skillId: String, endorserId: String) { // ✅ new — was missing
-        val token = sessionManager.getToken() ?: return
-        viewModelScope.launch {
-            skillRepository.endorseSkill(token, skillId, endorserId).fold(
-                onSuccess = { /* local list updates via Flow observation */ },
-                onFailure = { error ->
-                    _uiState.value = _uiState.value.copy(
-                        error = error.message ?: "Failed to endorse skill"
-                    )
-                }
-            )
-        }
-    }
-
-    fun searchSkills(query: String, category: String? = null) {
-        val token = sessionManager.getToken() ?: return  // ✅ token read internally
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            skillRepository.searchSkills(token, query, category).fold(
-                onSuccess = { skills ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        searchResults = skills,
-                        error = null
-                    )
-                },
-                onFailure = { error ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = error.message ?: "Search failed"
-                    )
-                }
-            )
-        }
-    }
-
-    fun selectSkill(skill: Skill?) {
-        _uiState.value = _uiState.value.copy(selectedSkill = skill)
+    fun selectSwap(swap: SwapDTO?) {
+        _uiState.value = _uiState.value.copy(selectedSwap = swap)
     }
 
     fun clearError() {

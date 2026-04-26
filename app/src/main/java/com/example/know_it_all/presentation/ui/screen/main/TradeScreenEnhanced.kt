@@ -1,4 +1,15 @@
 package com.example.know_it_all.presentation.ui.screen.main
+import com.example.know_it_all.ui.theme.AcidGreen
+import com.example.know_it_all.ui.theme.AcidGreenDark
+import com.example.know_it_all.ui.theme.Cream
+import com.example.know_it_all.ui.theme.CreamDark
+import com.example.know_it_all.ui.theme.CreamDeep
+import com.example.know_it_all.ui.theme.NearBlack
+import com.example.know_it_all.ui.theme.CharcoalGray
+import com.example.know_it_all.ui.theme.WarmGray
+import com.example.know_it_all.ui.theme.Ochre
+import com.example.know_it_all.ui.theme.ErrorRed
+import com.example.know_it_all.ui.theme.ErrorContainerColor
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -50,7 +61,6 @@ import androidx.navigation.NavHostController
 import com.example.know_it_all.data.model.SwapStatus
 import com.example.know_it_all.data.model.dto.SwapDTO
 import com.example.know_it_all.presentation.ui.components.BottomNavigationBar
-import com.example.know_it_all.ui.theme.KnowItAllColors
 import com.example.know_it_all.presentation.viewmodel.TradeViewModel
 
 /**
@@ -86,7 +96,7 @@ fun TradeScreenEnhanced(
     }
 
     Scaffold(
-        containerColor = KnowItAllColors.Cream,
+        containerColor = Cream,
         bottomBar = {
             BottomNavigationBar(
                 navController = navController,
@@ -102,14 +112,14 @@ fun TradeScreenEnhanced(
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold,
                             letterSpacing = 2.sp,
-                            color = KnowItAllColors.WarmGray
+                            color = WarmGray
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = "My Swaps",
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight.Black,
-                                color = KnowItAllColors.NearBlack,
+                                color = NearBlack,
                                 letterSpacing = (-0.5).sp
                             )
                             // Pending badge
@@ -118,14 +128,14 @@ fun TradeScreenEnhanced(
                                 Box(
                                     modifier = Modifier
                                         .size(22.dp)
-                                        .background(KnowItAllColors.AcidGreen, CircleShape),
+                                        .background(AcidGreen, CircleShape),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
                                         text = "${tradeState.pendingRequestCount}",
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Black,
-                                        color = KnowItAllColors.NearBlack
+                                        color = NearBlack
                                     )
                                 }
                             }
@@ -133,7 +143,7 @@ fun TradeScreenEnhanced(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = KnowItAllColors.Cream
+                    containerColor = Cream
                 )
             )
         }
@@ -141,7 +151,7 @@ fun TradeScreenEnhanced(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(KnowItAllColors.Cream)
+                .background(Cream)
                 .padding(innerPadding)
         ) {
             // Segmented tab control — pill style, not Material TabRow
@@ -158,7 +168,7 @@ fun TradeScreenEnhanced(
             if (tradeState.isLoading) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     androidx.compose.material3.CircularProgressIndicator(
-                        color = KnowItAllColors.NearBlack,
+                        color = NearBlack,
                         strokeWidth = 2.dp,
                         modifier = Modifier.size(28.dp)
                     )
@@ -204,18 +214,18 @@ private fun SwapCard(
     onCancel: () -> Unit
 ) {
     val statusColor = when (swap.status) {
-        SwapStatus.ACTIVE     -> KnowItAllColors.AcidGreen
-        SwapStatus.REQUESTED  -> KnowItAllColors.Ochre
-        SwapStatus.COMPLETED  -> KnowItAllColors.CharcoalGray
-        SwapStatus.CANCELLED  -> KnowItAllColors.ErrorRed
-        SwapStatus.DISPUTED   -> KnowItAllColors.ErrorRed
+        SwapStatus.ACTIVE     -> AcidGreen
+        SwapStatus.REQUESTED  -> Ochre
+        SwapStatus.COMPLETED  -> CharcoalGray
+        SwapStatus.CANCELLED  -> ErrorRed
+        SwapStatus.DISPUTED   -> ErrorRed
     }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(KnowItAllColors.CreamDark)
+            .background(CreamDark)
     ) {
         // Left status band
         Box(
@@ -241,14 +251,14 @@ private fun SwapCard(
                         text = swap.skillName,
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold,
-                        color = KnowItAllColors.NearBlack,
+                        color = NearBlack,
                         letterSpacing = (-0.3).sp
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "with ${swap.mentorName}",
                         fontSize = 13.sp,
-                        color = KnowItAllColors.CharcoalGray
+                        color = CharcoalGray
                     )
                 }
 
@@ -274,14 +284,14 @@ private fun SwapCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
-                        .background(KnowItAllColors.NearBlack, RoundedCornerShape(6.dp))
+                        .background(NearBlack, RoundedCornerShape(6.dp))
                         .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
                     Text(
                         text = "${swap.swapType.name}  ·  ${swap.tokenAmount}T",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = KnowItAllColors.AcidGreen,
+                        color = AcidGreen,
                         letterSpacing = 0.5.sp
                     )
                 }
@@ -295,16 +305,16 @@ private fun SwapCard(
                         ActionChip(
                             label = "Complete",
                             icon = Icons.Default.Check,
-                            containerColor = KnowItAllColors.AcidGreen,
-                            contentColor = KnowItAllColors.NearBlack,
+                            containerColor = AcidGreen,
+                            contentColor = NearBlack,
                             onClick = onComplete
                         )
                     }
                     ActionChip(
                         label = "Cancel",
                         icon = Icons.Default.Close,
-                        containerColor = KnowItAllColors.CreamDeep,
-                        contentColor = KnowItAllColors.CharcoalGray,
+                        containerColor = CreamDeep,
+                        contentColor = CharcoalGray,
                         onClick = onCancel
                     )
                 }
@@ -349,21 +359,21 @@ private fun SegmentedTabControl(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(KnowItAllColors.CreamDark, RoundedCornerShape(12.dp))
+            .background(CreamDark, RoundedCornerShape(12.dp))
             .padding(4.dp)
     ) {
         Row {
             tabs.forEachIndexed { index, label ->
                 val isSelected = index == selectedIndex
                 val bgColor by animateColorAsState(
-                    targetValue = if (isSelected) KnowItAllColors.NearBlack
+                    targetValue = if (isSelected) NearBlack
                                   else Color.Transparent,
                     animationSpec = tween(200),
                     label = "tab_bg"
                 )
                 val textColor by animateColorAsState(
-                    targetValue = if (isSelected) KnowItAllColors.Cream
-                                  else KnowItAllColors.CharcoalGray,
+                    targetValue = if (isSelected) Cream
+                                  else CharcoalGray,
                     animationSpec = tween(200),
                     label = "tab_text"
                 )
@@ -402,14 +412,14 @@ private fun TradeEmptyState(isActive: Boolean) {
             text = if (isActive) "No active swaps" else "No swap history yet",
             fontSize = 20.sp,
             fontWeight = FontWeight.Black,
-            color = KnowItAllColors.NearBlack
+            color = NearBlack
         )
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = if (isActive) "Head to the Radar to find\na mentor and request a swap"
                 else "Your completed swaps\nwill appear here",
             fontSize = 13.sp,
-            color = KnowItAllColors.CharcoalGray,
+            color = CharcoalGray,
             lineHeight = 20.sp
         )
     }

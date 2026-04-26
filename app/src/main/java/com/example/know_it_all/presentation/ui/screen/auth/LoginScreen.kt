@@ -1,4 +1,15 @@
 package com.example.know_it_all.presentation.ui.screen.auth
+import com.example.know_it_all.ui.theme.AcidGreen
+import com.example.know_it_all.ui.theme.AcidGreenDark
+import com.example.know_it_all.ui.theme.Cream
+import com.example.know_it_all.ui.theme.CreamDark
+import com.example.know_it_all.ui.theme.CreamDeep
+import com.example.know_it_all.ui.theme.NearBlack
+import com.example.know_it_all.ui.theme.CharcoalGray
+import com.example.know_it_all.ui.theme.WarmGray
+import com.example.know_it_all.ui.theme.Ochre
+import com.example.know_it_all.ui.theme.ErrorRed
+import com.example.know_it_all.ui.theme.ErrorContainerColor
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -55,7 +66,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.know_it_all.presentation.ui.navigation.Screen
-import com.example.know_it_all.ui.theme.KnowItAllColors
 import com.example.know_it_all.presentation.viewmodel.AuthViewModel
 
 private fun isValidEmail(email: String) =
@@ -101,7 +111,7 @@ fun LoginScreen(
         if (authState.isAuthenticated) {
             authViewModel.clearError()
             navController.navigate(Screen.Radar.route) {
-                popUpTo(Screen.Login.route) { isInclusive = true }
+                popUpTo(Screen.Login.route) { inclusive = true }
             }
         }
     }
@@ -113,7 +123,7 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(KnowItAllColors.Cream)
+            .background(Cream)
     ) {
         Column(
             modifier = Modifier
@@ -128,11 +138,11 @@ fun LoginScreen(
             Box(
                 modifier = Modifier
                     .size(52.dp)
-                    .background(KnowItAllColors.NearBlack, RoundedCornerShape(14.dp)),
+                    .background(NearBlack, RoundedCornerShape(14.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Text("K", fontSize = 28.sp, fontWeight = FontWeight.Black,
-                    color = KnowItAllColors.AcidGreen)
+                    color = AcidGreen)
             }
 
             Spacer(modifier = Modifier.height(28.dp))
@@ -142,7 +152,7 @@ fun LoginScreen(
                 text = "Welcome\nback.",
                 fontSize = 42.sp,
                 fontWeight = FontWeight.Black,
-                color = KnowItAllColors.NearBlack,
+                color = NearBlack,
                 lineHeight = 46.sp,
                 letterSpacing = (-1.5).sp
             )
@@ -150,7 +160,7 @@ fun LoginScreen(
             Text(
                 text = "Sign in to continue trading skills.",
                 fontSize = 15.sp,
-                color = KnowItAllColors.CharcoalGray
+                color = CharcoalGray
             )
 
             Spacer(modifier = Modifier.height(40.dp))
@@ -190,7 +200,7 @@ fun LoginScreen(
                             imageVector = if (passwordVisible)
                                 Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
                             contentDescription = null,
-                            tint = KnowItAllColors.WarmGray,
+                            tint = WarmGray,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -221,14 +231,14 @@ fun LoginScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(
-                                KnowItAllColors.ErrorContainer,
+                                ErrorContainerColor,
                                 RoundedCornerShape(10.dp)
                             )
-                            .border(1.dp, KnowItAllColors.ErrorRed.copy(alpha = 0.3f),
+                            .border(1.dp, ErrorRed.copy(alpha = 0.3f),
                                 RoundedCornerShape(10.dp))
                             .padding(14.dp)
                     ) {
-                        Text(err, fontSize = 13.sp, color = KnowItAllColors.ErrorRed)
+                        Text(err, fontSize = 13.sp, color = ErrorRed)
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                 }
@@ -248,16 +258,16 @@ fun LoginScreen(
                     .height(54.dp),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = KnowItAllColors.AcidGreen,
-                    contentColor = KnowItAllColors.NearBlack,
-                    disabledContainerColor = KnowItAllColors.AcidGreen.copy(alpha = 0.4f),
-                    disabledContentColor = KnowItAllColors.NearBlack.copy(alpha = 0.4f)
+                    containerColor = AcidGreen,
+                    contentColor = NearBlack,
+                    disabledContainerColor = AcidGreen.copy(alpha = 0.4f),
+                    disabledContentColor = NearBlack.copy(alpha = 0.4f)
                 )
             ) {
                 if (authState.isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
-                        color = KnowItAllColors.NearBlack,
+                        color = NearBlack,
                         strokeWidth = 2.dp
                     )
                 } else {
@@ -280,7 +290,7 @@ fun LoginScreen(
                 Text(
                     "Don't have an account?",
                     fontSize = 13.sp,
-                    color = KnowItAllColors.CharcoalGray
+                    color = CharcoalGray
                 )
                 TextButton(
                     onClick = { navController.navigate(Screen.Register.route) },
@@ -290,7 +300,7 @@ fun LoginScreen(
                         "Create one",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = KnowItAllColors.NearBlack
+                        color = NearBlack
                     )
                 }
             }
@@ -310,7 +320,7 @@ internal fun FieldLabel(text: String) {
         text = text,
         fontSize = 12.sp,
         fontWeight = FontWeight.SemiBold,
-        color = KnowItAllColors.CharcoalGray,
+        color = CharcoalGray,
         letterSpacing = 0.8.sp,
         modifier = Modifier.padding(bottom = 6.dp)
     )
@@ -333,16 +343,16 @@ internal fun KnowItAllTextField(
             value = value,
             onValueChange = onValueChange,
             placeholder = {
-                Text(placeholder, fontSize = 14.sp, color = KnowItAllColors.WarmGray)
+                Text(placeholder, fontSize = 14.sp, color = WarmGray)
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .background(KnowItAllColors.CreamDark, RoundedCornerShape(12.dp))
+                .background(CreamDark, RoundedCornerShape(12.dp))
                 .then(
                     if (error != null)
-                        Modifier.border(1.5.dp, KnowItAllColors.ErrorRed, RoundedCornerShape(12.dp))
+                        Modifier.border(1.5.dp, ErrorRed, RoundedCornerShape(12.dp))
                     else
-                        Modifier.border(1.dp, KnowItAllColors.CreamDeep, RoundedCornerShape(12.dp))
+                        Modifier.border(1.dp, CreamDeep, RoundedCornerShape(12.dp))
                 ),
             enabled = enabled,
             singleLine = true,
@@ -352,15 +362,15 @@ internal fun KnowItAllTextField(
             keyboardActions = keyboardActions,
             shape = RoundedCornerShape(12.dp),
             colors = TextFieldDefaults.colors(
-                focusedContainerColor = KnowItAllColors.CreamDark,
-                unfocusedContainerColor = KnowItAllColors.CreamDark,
-                disabledContainerColor = KnowItAllColors.CreamDeep,
+                focusedContainerColor = CreamDark,
+                unfocusedContainerColor = CreamDark,
+                disabledContainerColor = CreamDeep,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
                 disabledIndicatorColor = Color.Transparent,
-                focusedTextColor = KnowItAllColors.NearBlack,
-                unfocusedTextColor = KnowItAllColors.NearBlack,
-                cursorColor = KnowItAllColors.NearBlack
+                focusedTextColor = NearBlack,
+                unfocusedTextColor = NearBlack,
+                cursorColor = NearBlack
             )
         )
         AnimatedVisibility(visible = error != null) {
@@ -368,7 +378,7 @@ internal fun KnowItAllTextField(
                 Text(
                     text = it,
                     fontSize = 11.sp,
-                    color = KnowItAllColors.ErrorRed,
+                    color = ErrorRed,
                     modifier = Modifier.padding(start = 4.dp, top = 4.dp)
                 )
             }

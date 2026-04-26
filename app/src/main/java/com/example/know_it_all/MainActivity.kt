@@ -4,9 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
-import com.example.know_it_all.presentation.ui.app.KnowItAllApp
+import com.example.know_it_all.presentation.ui.navigation.KnowItAllNavigation
 import com.example.know_it_all.ui.theme.KnowItAllTheme
 
 class MainActivity : ComponentActivity() {
@@ -15,7 +13,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             KnowItAllTheme {
-                KnowItAllApp(modifier = Modifier.fillMaxSize())
+                KnowItAllNavigation()  // no modifier param — NavGraph doesn't require it
             }
         }
     }
