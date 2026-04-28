@@ -65,15 +65,15 @@
                3. An Intent with ACTION_VIEW + FLAG_GRANT_READ_URI_PERMISSION
                   opens the PDF in any installed viewer
 
-             AUTHORITY RULE:
+           AUTHORITY RULE:
                The authority string MUST be "${applicationId}.fileprovider"
                exactly. It is referenced in VaultScreenEnhanced as:
                "${context.packageName}.fileprovider"
-               Both must match or the URI will fail to resolve.
+           Both must match or the URI will fail to resolve.
 
-             PATH CONFIG:
-               android:resource="@xml/file_paths" points to
-               res/xml/file_paths.xml which maps directory names to real paths.
+        PATH CONFIG:
+                android:resource="@xml/file_paths" points to
+            res/xml/file_paths.xml which maps directory names to real paths.
         -->
         <provider
             android:name="androidx.core.content.FileProvider"

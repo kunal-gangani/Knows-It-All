@@ -57,6 +57,7 @@ dependencies {
     
     // Navigation
     implementation(libs.navigation.compose)
+    implementation("org.osmdroid:osmdroid-android:6.1.18")
     
     // ViewModel & Lifecycle
     implementation(libs.viewmodel.compose)
