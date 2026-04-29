@@ -76,16 +76,13 @@ class SwapRepository(
     suspend fun getActiveSwapsRemote(token: String): Result<List<SwapDTO>> {
         return if (USE_MOCK) {
             val dtos = MockDataSource.getActiveSwaps()
-            val entities = dtos.map { it.toEntity() }
-            swapDao.insertSwaps(entities)                           // ✅ cache write
-            Result.success(dtos)
         } else {
             try {
                 val response = swapService.getActiveSwaps("Bearer $token")
                 if (response.success && response.data != null) {
                     val entities = response.data.map { it.toEntity() }
                     swapDao.insertSwaps(entities)                   // ✅ cache write
-                    Result.success(response.data)
+//                     Result.success(response.data)
                 } else {
                     Result.failure(Exception(response.error ?: "Failed to fetch swaps"))
                 }
@@ -102,9 +99,6 @@ class SwapRepository(
     ): Result<List<SwapDTO>> {
         return if (USE_MOCK) {
             val dtos = MockDataSource.getSwapHistory()
-            val entities = dtos.map { it.toEntity() }
-            swapDao.insertSwaps(entities)                           // ✅ cache write
-            Result.success(dtos)
         } else {
             try {
                 val response = swapService.getSwapHistory("Bearer $token", limit, offset)
@@ -243,4 +237,3 @@ private fun SwapDTO.toEntity(): Swap = Swap(
     sessionEndTime = sessionEndTime,
     createdAt = createdAt ?: System.currentTimeMillis(),
     updatedAt = System.currentTimeMillis()
-)
