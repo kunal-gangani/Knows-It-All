@@ -17,6 +17,17 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // ✅ Dynamic BASE_URL Logic
+        // Pulls from local.properties (e.g., api.url=http://192.168.1.5:8080/api/v1/)
+        // Defaults to 10.0.2.2 for Emulator if not found.
+        val apiUri = project.findProperty("api.url") ?: "http://10.0.2.2:8080/api/v1/"
+        buildConfigField("String", "BASE_URL", "\"$apiUri\"")
+    }
+
+    // ✅ Enable BuildConfig generation
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {
@@ -55,7 +66,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.zxing.core)
     
-    // Navigation
+    // Navigation & Maps
     implementation(libs.navigation.compose)
     implementation("org.osmdroid:osmdroid-android:6.1.18")
     
@@ -69,6 +80,9 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
     implementation(libs.gson)
+    
+    // ✅ Security & Crypto (Added for PreferenceManager)
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
     
     // Room Database
     implementation(libs.room.runtime)

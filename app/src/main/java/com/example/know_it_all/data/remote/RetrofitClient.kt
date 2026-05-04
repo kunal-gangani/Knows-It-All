@@ -30,10 +30,7 @@ import java.util.concurrent.TimeUnit
  * and add: import com.example.know_it_all.BuildConfig
  */
 object RetrofitClient {
-
-    // ✅ Hardcoded for now — replace with BuildConfig.BASE_URL once
-    // buildConfig = true is added to build.gradle.kts
-    private const val BASE_URL = "http://192.168.0.107:8080/api/v1/"
+    private const val BASE_URL = BuildConfig.BASE_URL
 
     private val loggingInterceptor: HttpLoggingInterceptor by lazy {
         HttpLoggingInterceptor().apply {
