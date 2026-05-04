@@ -40,21 +40,20 @@ object RetrofitClient {
         }
     }
 
-    // In RetrofitClient.kt
 private val httpClient: OkHttpClient by lazy {
     OkHttpClient.Builder()
         .addInterceptor { chain ->
             val original = chain.request()
-            // Fetch token from your Preference Manager (you'll need to create this)
-            val token = PreferenceManager.getToken() 
-            
+            val token = PreferenceManager.getToken(context) 
+
             val requestBuilder = original.newBuilder()
-                .header("Authorization", "Bearer $token")
-                .method(original.method, original.body)
+            
+            if (!token.isNullOrEmpty()) {
+                requestBuilder.header("Authorization", "Bearer $token")
+            }
             
             chain.proceed(requestBuilder.build())
         }
-        // ... your existing timeouts and logging
         .build()
 }
 
