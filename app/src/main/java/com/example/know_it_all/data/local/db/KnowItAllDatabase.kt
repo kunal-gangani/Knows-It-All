@@ -49,8 +49,8 @@ import com.example.know_it_all.data.model.User
         Swap::class,
         TrustLedger::class
     ],
-    version = 3,                   // ✅ bumped — schema changed from Batch 1 fixes
-    exportSchema = true            // ✅ generates auditable schema JSON in /schemas
+    version = 4,                   // ✅ bumped — schema changed from Batch 1 fixes
+    exportSchema = false            // ✅ generates auditable schema JSON in /schemas
 )
 @TypeConverters(RoomTypeConverters::class)  // ✅ correct converter class
 abstract class KnowItAllDatabase : RoomDatabase() {
