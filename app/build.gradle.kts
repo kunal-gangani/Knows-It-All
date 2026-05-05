@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -19,9 +21,14 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // ✅ Dynamic BASE_URL Logic
-        // Pulls from local.properties (e.g., api.url=http://192.168.1.5:8080/api/v1/)
-        // Defaults to 10.0.2.2 for Emulator if not found.
-        val apiUri = project.findProperty("api.url") ?: "http://10.0.2.2:8080/api/v1/"
+        // Loads from local.properties (api.url property)
+        // Defaults to 10.0.2.2 for Emulator if property not found
+        val localProperties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localProperties.load(localPropertiesFile.inputStream())
+        }
+        val apiUri = localProperties.getProperty("api.url") ?: "http://10.0.2.2:8080/api/v1/"
         buildConfigField("String", "BASE_URL", "\"$apiUri\"")
     }
 
