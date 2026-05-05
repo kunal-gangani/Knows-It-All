@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -20,9 +21,6 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // ✅ Dynamic BASE_URL Logic
-        // Loads from local.properties (api.url property)
-        // Defaults to 10.0.2.2 for Emulator if property not found
         val localProperties = Properties()
         val localPropertiesFile = rootProject.file("local.properties")
         if (localPropertiesFile.exists()) {
@@ -32,7 +30,6 @@ android {
         buildConfigField("String", "BASE_URL", "\"$apiUri\"")
     }
 
-    // ✅ Enable BuildConfig generation
     buildFeatures {
         buildConfig = true
     }
@@ -58,26 +55,26 @@ android {
 }
 
 dependencies {
-    // Core Android
+    // Core Android & Compose
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
-    
-    // Compose
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
+    
+    // ✅ Firebase Dependencies
+    implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx")
     implementation(libs.kotlinx.coroutines.play.services)
-    implementation(libs.zxing.core)
-    
-    // Navigation & Maps
+
+    // Navigation, ViewModel & Lifecycle
     implementation(libs.navigation.compose)
-    implementation("org.osmdroid:osmdroid-android:6.1.18")
-    
-    // ViewModel & Lifecycle
     implementation(libs.viewmodel.compose)
     implementation(libs.runtime.compose)
     
@@ -88,27 +85,19 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.gson)
     
-    // ✅ Security & Crypto (Added for PreferenceManager)
+    // Security, Room, Location
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
-    
-    // Room Database
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
-    
-    // Location Services
     implementation(libs.play.services.location)
     
-    // TensorFlow Lite
+    // Specialized Tools
     implementation(libs.tensorflow.lite)
     implementation(libs.tensorflow.lite.gpu)
-    
-    // Image Loading
     implementation(libs.coil.compose)
-    
-    // Accompanist
-    implementation(libs.accompanist.permissions)
-    implementation(libs.accompanist.systemuicontroller)
+    implementation(libs.zxing.core)
+    implementation("org.osmdroid:osmdroid-android:6.1.18")
     
     // iText PDF
     implementation(libs.itext.kernel)
@@ -120,8 +109,5 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
-}
+}   
