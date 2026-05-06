@@ -71,6 +71,7 @@ import com.example.know_it_all.presentation.viewmodel.RadarViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
