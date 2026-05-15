@@ -103,7 +103,7 @@ fun SkillProfileScreenEnhanced(
 
     LaunchedEffect(userId) {
         if (userId.isNotBlank()) {
-            skillViewModel.loadUserSkills(userId)   // ✅ userId only, no token param
+            skillViewModel.loadSkills()   // ✅ userId only, no token param
         }
     }
 
@@ -111,7 +111,7 @@ fun SkillProfileScreenEnhanced(
     LaunchedEffect(skillState.successMessage) {
         if (skillState.successMessage != null) {
             // Auto-clear after short delay
-            skillViewModel.clearSuccessMessage()
+            skillViewModel.clearError()
         }
     }
 
@@ -174,7 +174,7 @@ fun SkillProfileScreenEnhanced(
                 ProfileHeaderCard(
                     userName = userName,
                     userId = userId,
-                    skillCount = skillState.userSkills.size
+                    skillCount = skillState.skills.size
                 )
             }
 
@@ -253,7 +253,7 @@ fun SkillProfileScreenEnhanced(
             }
 
             // Loading
-            if (skillState.isLoading && skillState.userSkills.isEmpty()) {
+            if (skillState.isLoading && skillState.skills.isEmpty()) {
                 item {
                     Box(
                         modifier = Modifier
@@ -271,13 +271,13 @@ fun SkillProfileScreenEnhanced(
             }
 
             // Empty state
-            if (!skillState.isLoading && skillState.userSkills.isEmpty()) {
+            if (!skillState.isLoading && skillState.skills.isEmpty()) {
                 item { SkillsEmptyState(onAdd = { showAddSkillSheet = true }) }
             }
 
             // Skill cards
             itemsIndexed(
-                skillState.userSkills,
+                skillState.skills,
                 key = { _, skill -> skill.skillId }        // ✅ stable String UUID keys
             ) { index, skill ->
                 AnimatedVisibility(

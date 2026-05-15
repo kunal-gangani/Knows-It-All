@@ -84,11 +84,7 @@ fun VaultScreenEnhanced(
 ) {
     val context = LocalContext.current
     val ledgerState by ledgerViewModel.uiState.collectAsState()
-    val passportEvent by ledgerViewModel.passportEvent.collectAsState()
-
-    LaunchedEffect(Unit) {
-        ledgerViewModel.loadLedger(userId)  // ✅ no token param
-    }
+    val passportEvent by ledgerViewModel.passportEvent.collectAsState(initial = null)
 
     // Handle passport file event — launch share intent when ready
     LaunchedEffect(passportEvent) {
@@ -109,7 +105,6 @@ fun VaultScreenEnhanced(
                 // No PDF viewer installed — fall through, passport file is still saved
                 e.printStackTrace()
             }
-            ledgerViewModel.consumePassportEvent()
         }
     }
 
@@ -162,8 +157,8 @@ fun VaultScreenEnhanced(
                 TokenBalanceCard(
                     balance = ledgerState.tokenBalance,
                     trustScore = ledgerState.trustScore,
-                    completedSwaps = ledgerState.completedSwapCount,
-                    averageRating = ledgerState.averageRating
+                    completedSwaps = ledgerState.totalSwaps,
+                    averageRating = ledgerState.trustScore
                 )
             }
 
@@ -172,14 +167,9 @@ fun VaultScreenEnhanced(
                 Button(
                     onClick = {
                         // userName and userEmail should be passed in or read from SessionManager
-                        ledgerViewModel.generateSkillPassport(
-                            context = context,
-                            userId = userId,
-                            userName = "User",   // TODO: pass in from NavGraph
-                            userEmail = ""
-                        )
+                        ledgerViewModel.generateSkillPassport(context)
                     },
-                    enabled = !ledgerState.isGeneratingPassport,
+                    enabled = !ledgerState.isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
@@ -191,7 +181,7 @@ fun VaultScreenEnhanced(
                         disabledContentColor = WarmGray
                     )
                 ) {
-                    if (ledgerState.isGeneratingPassport) {
+                    if (ledgerState.isLoading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(18.dp),
                             color = AcidGreen,

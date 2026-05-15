@@ -87,8 +87,7 @@ fun TradeScreenEnhanced(
     val tradeState by tradeViewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) {
-        tradeViewModel.init(userId)
-        tradeViewModel.loadActiveSwaps(userId)   // ✅ no token param
+        tradeViewModel.loadActiveSwaps()
     }
 
     LaunchedEffect(selectedTab) {
