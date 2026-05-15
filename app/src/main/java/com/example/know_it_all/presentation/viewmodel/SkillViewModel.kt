@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.know_it_all.data.model.Skill
 import com.example.know_it_all.data.model.dto.SkillCreateRequest
-import com.example.know_it_all.data.repository.SkillRepository
+import com.example.know_it_all.data.repository.FirebaseSkillRepository
 import com.example.know_it_all.util.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -46,7 +46,7 @@ data class SkillUiState(
 )
 
 class SkillViewModel(
-    private val skillRepository: SkillRepository,
+    private val skillRepository: FirebaseSkillRepository,
     private val sessionManager: SessionManager      // ✅ injected
 ) : ViewModel() {
 

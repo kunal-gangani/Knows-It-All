@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.know_it_all.data.model.TrustLedger
-import com.example.know_it_all.data.repository.LedgerRepository
-import com.example.know_it_all.data.repository.SkillRepository
+import com.example.know_it_all.data.repository.FirebaseLedgerRepository
+import com.example.know_it_all.data.repository.FirebaseSkillRepository
 import com.example.know_it_all.util.SessionManager
 import com.example.know_it_all.util.SkillPassportGenerator
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,9 +57,9 @@ data class LedgerUiState(
 )
 
 class LedgerViewModel(
-    private val ledgerRepository: LedgerRepository,
-    private val skillRepository: SkillRepository,
-    private val userRepository: com.example.know_it_all.data.repository.UserRepository,
+    private val ledgerRepository: FirebaseLedgerRepository,
+    private val skillRepository: FirebaseSkillRepository,
+    private val userRepository: com.example.know_it_all.data.repository.FirebaseUserRepository,
     private val sessionManager: SessionManager                  // ✅ injected
 ) : ViewModel() {
 

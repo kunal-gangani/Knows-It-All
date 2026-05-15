@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.know_it_all.data.model.Swap
 import com.example.know_it_all.data.model.dto.SwapDTO
 import com.example.know_it_all.data.model.dto.SwapRequestBody
-import com.example.know_it_all.data.repository.SwapRepository
+import com.example.know_it_all.data.repository.FirebaseSwapRepository
 import com.example.know_it_all.util.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -57,7 +57,7 @@ data class TradeUiState(
 )
 
 class TradeViewModel(
-    private val swapRepository: SwapRepository,
+    private val swapRepository: FirebaseSwapRepository,
     private val sessionManager: SessionManager      // ✅ injected
 ) : ViewModel() {
 

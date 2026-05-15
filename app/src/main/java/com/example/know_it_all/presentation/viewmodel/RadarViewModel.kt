@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.know_it_all.data.model.User
 import com.example.know_it_all.data.model.dto.UserDTO
-import com.example.know_it_all.data.repository.UserRepository
+import com.example.know_it_all.data.repository.FirebaseUserRepository
 import com.example.know_it_all.util.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -54,7 +54,7 @@ data class RadarUiState(
 )
 
 class RadarViewModel(
-    private val userRepository: UserRepository,
+    private val userRepository: FirebaseUserRepository,
     private val sessionManager: SessionManager          // ✅ injected
 ) : ViewModel() {
 
