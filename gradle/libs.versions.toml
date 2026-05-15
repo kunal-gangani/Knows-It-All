@@ -23,6 +23,8 @@ itext = "7.2.5"
 materialIconsExtended = "1.6.0"
 coroutinesPlayServices = "1.7.3"
 zxing = "3.5.3"
+coroutines = "1.7.3"
+security = "1.1.0-alpha06"
 
 [libraries]
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "materialIconsExtended" }
@@ -71,6 +73,11 @@ itext-kernel = { group = "com.itextpdf", name = "kernel", version.ref = "itext" 
 itext-io = { group = "com.itextpdf", name = "io", version.ref = "itext" }
 itext-layout = { group = "com.itextpdf", name = "layout", version.ref = "itext" }
 itext-forms = { group = "com.itextpdf", name = "forms", version.ref = "itext" }
+# Security & Encryption
+security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "security" }
+# Coroutines
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

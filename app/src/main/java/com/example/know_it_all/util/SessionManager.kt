@@ -58,6 +58,18 @@ class SessionManager(context: Context) {
         return com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
     }
 
+    /**
+     * Returns the Firebase ID token for API authentication.
+     * Suspends until token is retrieved from Firebase.
+     */
+    suspend fun getToken(): String? {
+        return try {
+            com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.getIdToken(false)?.result?.token
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     // ── Clear session on logout ───────────────────────────────────────────────
 
     fun clearSession() {

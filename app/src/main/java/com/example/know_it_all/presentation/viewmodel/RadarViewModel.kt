@@ -3,131 +3,108 @@ package com.example.know_it_all.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.know_it_all.data.model.User
-import com.example.know_it_all.data.model.dto.UserDTO
 import com.example.know_it_all.data.repository.FirebaseUserRepository
 import com.example.know_it_all.util.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-/**
- * Fixes applied:
- *
- *  1. SessionManager injected — token read internally, not passed as a
- *     parameter on every call. Eliminates stale-token risk at call sites.
- *
- *  2. nearbyUsers changed from List<UserDTO> to List<User> (Room entity).
- *     The Radar screen should observe the local Room cache via a Flow so
- *     it stays populated offline. UserDTO is a network concern — the UI
- *     layer should work with the domain/entity model after the repository
- *     has mapped and cached the response.
- *
- *  3. Location (lat/lon) is now stored in state and updated via
- *     updateLocation() before the network call — the original hardcoded
- *     0.0, 0.0 and left a TODO. The screen must call updateLocation() with
- *     real GPS coordinates from the FusedLocationProvider before calling
- *     loadNearbyUsers().
- *
- *  4. loadNearbyUsers() now first emits the cached users from Room (instant
- *     display) then fires the remote fetch to refresh. This gives the Radar
- *     screen immediate content even before the network responds.
- *
- *  5. selectedUser added to state — the Radar screen needs to show a
- *     profile preview bottom sheet on card tap.
- *
- *  6. onlineOnly filter added — maps to the "online now" green dot filter
- *     visible in the Dribbble UI reference.
- *
- *  7. uiState exposed via asStateFlow().
- */
 data class RadarUiState(
-    val isLoading: Boolean = false,
-    val nearbyUsers: List<User> = emptyList(),          // ✅ Room entity, not DTO
-    val selectedUser: User? = null,                     // ✅ for profile preview bottom sheet
-    val error: String? = null,
+    val nearbyUsers: List<User> = emptyList(),
     val currentLat: Double = 0.0,
     val currentLon: Double = 0.0,
     val radiusKm: Double = 5.0,
-    val onlineOnly: Boolean = false                     // ✅ online filter for UI
+    val onlineOnly: Boolean = false,
+    val isLoading: Boolean = false,
+    val error: String? = null,
+    val selectedUser: User? = null
 )
 
 class RadarViewModel(
     private val userRepository: FirebaseUserRepository,
-    private val sessionManager: SessionManager          // ✅ injected
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RadarUiState())
     val uiState: StateFlow<RadarUiState> = _uiState.asStateFlow()
 
-    /**
-     * Call this first with real GPS coordinates from FusedLocationProvider
-     * before calling loadNearbyUsers(). The screen is responsible for
-     * requesting location permission and providing coordinates.
-     */
-    fun updateLocation(latitude: Double, longitude: Double) {
-        _uiState.value = _uiState.value.copy(
-            currentLat = latitude,
-            currentLon = longitude
-        )
-    }
+    private val userId get() = sessionManager.getUserId() ?: ""
+
+    // ── Load nearby users ─────────────────────────────────────────────────────
 
     fun loadNearbyUsers() {
-        val token = sessionManager.getToken() ?: return  // ✅ token read internally
         val lat = _uiState.value.currentLat
         val lon = _uiState.value.currentLon
-        val radius = _uiState.value.radiusKm
+
+        // Don't query if location not yet available
+        if (lat == 0.0 && lon == 0.0) return
 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
-            // Step 1: Show cached users immediately (offline-first)
-            launch {
-                userRepository.getLocalUser("").let {
-                    // Observe all nearby users from Room bounding box cache
-                    // This emits instantly with whatever is in the cache
-                }
-            }
+            userRepository.getNearbyUsers(
+                currentUserId = userId,
+                latitude      = lat,
+                longitude     = lon,
+                radiusKm      = _uiState.value.radiusKm
+            ).fold(
+                onSuccess = { users ->
+                    val filtered = if (_uiState.value.onlineOnly)
+                        users.filter { it.isOnline }
+                    else users
 
-            // Step 2: Refresh from network — repository writes to Room,
-            // which triggers the Flow observation above automatically
-            userRepository.getNearbyUsers(token, lat, lon, radius).fold(
-                onSuccess = { dtos ->
-                    // Repository has already written DTOs to Room cache.
-                    // Now observe the Room cache as the single source of truth.
-                    launch {
-                        // Collect all users from local cache after remote refresh
-                        // In production, replace with a proper bounding-box DAO query
-                        // exposed through the repository as a Flow<List<User>>.
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            error = null
-                        )
-                    }
+                    _uiState.value = _uiState.value.copy(
+                        nearbyUsers = filtered,
+                        isLoading = false
+                    )
                 },
-                onFailure = { error ->
+                onFailure = { e ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        error = error.message ?: "Failed to load nearby users"
+                        error = e.message ?: "Failed to load nearby users"
                     )
                 }
             )
         }
     }
 
-    fun updateRadius(newRadius: Double) {
-        _uiState.value = _uiState.value.copy(radiusKm = newRadius)
-        loadNearbyUsers()
+    // ── Update location ───────────────────────────────────────────────────────
+
+    fun updateLocation(latitude: Double, longitude: Double) {
+        _uiState.value = _uiState.value.copy(
+            currentLat = latitude,
+            currentLon = longitude
+        )
+        // Update location in Firestore so other users can see us on the map
+        viewModelScope.launch {
+            userRepository.updateLocation(userId, latitude, longitude)
+        }
     }
 
-    fun toggleOnlineFilter() {                          // ✅ online filter toggle
+    // ── Refresh location and reload ───────────────────────────────────────────
+
+    fun refreshLocationAndLoad(context: android.content.Context) {
+        viewModelScope.launch {
+            val location = com.example.know_it_all.util.LocationService(context)
+                .getBestAvailableLocation()
+            if (location != null) {
+                updateLocation(location.latitude, location.longitude)
+            }
+            loadNearbyUsers()
+        }
+    }
+
+    // ── Filters ───────────────────────────────────────────────────────────────
+
+    fun toggleOnlineFilter() {
         _uiState.value = _uiState.value.copy(
             onlineOnly = !_uiState.value.onlineOnly
         )
+        loadNearbyUsers()
     }
 
-    fun selectUser(user: User?) {                       // ✅ profile preview selection
+    fun selectUser(user: User?) {
         _uiState.value = _uiState.value.copy(selectedUser = user)
     }
 

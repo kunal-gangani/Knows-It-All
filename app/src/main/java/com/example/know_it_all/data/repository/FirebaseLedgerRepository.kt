@@ -35,6 +35,9 @@ class FirebaseLedgerRepository {
         awaitClose { listener.remove() }
     }
 
+    // Alias for ViewModel compatibility
+    fun getUserLedgerLocal(userId: String): Flow<List<TrustLedger>> = observeUserLedger(userId)
+
     // ── One-shot reads ────────────────────────────────────────────────────────
 
     suspend fun getUserLedger(
