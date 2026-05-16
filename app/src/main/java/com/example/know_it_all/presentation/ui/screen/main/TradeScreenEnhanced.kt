@@ -87,7 +87,7 @@ fun TradeScreenEnhanced(
     val tradeState by tradeViewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) {
-        tradeViewModel.loadActiveSwaps()
+        tradeViewModel.loadActiveSwaps()   // ✅ no token param
     }
 
     LaunchedEffect(selectedTab) {
@@ -190,6 +190,7 @@ fun TradeScreenEnhanced(
                         ) {
                             SwapCard(
                                 swap = swap,
+                                currentUserId = userId,
                                 onComplete = { tradeViewModel.completeSwap(swap.swapId) },
                                 onCancel = { tradeViewModel.cancelSwap(swap.swapId) }
                             )
@@ -209,6 +210,7 @@ fun TradeScreenEnhanced(
 @Composable
 private fun SwapCard(
     swap: SwapDTO,
+    currentUserId: String,
     onComplete: () -> Unit,
     onCancel: () -> Unit
 ) {
@@ -219,6 +221,12 @@ private fun SwapCard(
         SwapStatus.CANCELLED  -> ErrorRed
         SwapStatus.DISPUTED   -> ErrorRed
     }
+
+    // Show correct perspective — mentor sees "from Learner", learner sees "to Mentor"
+    val isMentor = swap.mentorId == currentUserId
+    val counterpartName = if (isMentor) swap.learnerName else swap.mentorName
+    val roleLabel = if (isMentor) "Request from" else "Request to"
+    val displaySkill = swap.skillName.ifBlank { "Skill swap" }
 
     Box(
         modifier = Modifier
@@ -247,7 +255,7 @@ private fun SwapCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = swap.skillName,
+                        text = displaySkill,
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold,
                         color = NearBlack,
@@ -255,7 +263,7 @@ private fun SwapCard(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "with ${swap.mentorName}",
+                        text = "$roleLabel $counterpartName",
                         fontSize = 13.sp,
                         color = CharcoalGray
                     )
@@ -416,7 +424,7 @@ private fun TradeEmptyState(isActive: Boolean) {
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = if (isActive) "Head to the Radar to find\na mentor and request a swap"
-                else "Your completed swaps\nwill appear here",
+                   else "Your completed swaps\nwill appear here",
             fontSize = 13.sp,
             color = CharcoalGray,
             lineHeight = 20.sp

@@ -98,11 +98,16 @@ class FirebaseSwapRepository {
 
     suspend fun requestSwap(request: SwapRequestBody): Result<SwapDTO> {
         return try {
-            // Fetch mentor name for display
-            val mentorDoc  = usersCollection.document(request.mentorId).get().await()
-            val learnerDoc = usersCollection.document(request.learnerId).get().await()
+            // Fetch mentor name, learner name and skill name in parallel
+            val mentorDoc   = usersCollection.document(request.mentorId).get().await()
+            val learnerDoc  = usersCollection.document(request.learnerId).get().await()
+            val skillDoc    = db.collection("skills")
+                                .document(request.mentorSkillId).get().await()
+
             val mentorName  = mentorDoc.getString("name") ?: ""
             val learnerName = learnerDoc.getString("name") ?: ""
+            // ✅ Fetch actual skill name instead of leaving it empty
+            val skillName   = skillDoc.getString("skillName") ?: ""
 
             val swapId = UUID.randomUUID().toString()
             val now    = System.currentTimeMillis()
@@ -123,7 +128,7 @@ class FirebaseSwapRepository {
                 "sessionEndTime"     to null,
                 "createdAt"          to now,
                 "updatedAt"          to now,
-                "skillName"          to ""   // filled when skill is fetched
+                "skillName"          to skillName  // ✅ now populated correctly
             )
 
             swapsCollection.document(swapId).set(swapMap).await()
@@ -134,7 +139,7 @@ class FirebaseSwapRepository {
                 learnerId          = request.learnerId,
                 mentorName         = mentorName,
                 learnerName        = learnerName,
-                skillName          = "",
+                skillName          = skillName,   // ✅ populated
                 mentorSkillId      = request.mentorSkillId,
                 learnerSkillId     = request.learnerSkillId,
                 swapType           = request.swapType ?: SwapType.TOKEN,
