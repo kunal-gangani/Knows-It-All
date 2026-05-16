@@ -1,17 +1,15 @@
 package com.example.know_it_all.presentation.ui.screen.main
 
-import android.Manifest
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.drawable.BitmapDrawable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
+import android.Manifest
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,18 +23,23 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -49,24 +52,31 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavHostController
+import com.example.know_it_all.data.model.Skill
+import com.example.know_it_all.data.model.SwapType
 import com.example.know_it_all.data.model.User
+import com.example.know_it_all.data.model.dto.SwapRequestBody
+import com.example.know_it_all.data.repository.FirebaseSkillRepository
+import com.example.know_it_all.data.repository.FirebaseSwapRepository
 import com.example.know_it_all.presentation.ui.components.BottomNavigationBar
 import com.example.know_it_all.presentation.viewmodel.RadarViewModel
 import com.example.know_it_all.ui.theme.AcidGreen
 import com.example.know_it_all.ui.theme.CharcoalGray
 import com.example.know_it_all.ui.theme.Cream
 import com.example.know_it_all.ui.theme.CreamDark
+import com.example.know_it_all.ui.theme.CreamDeep
 import com.example.know_it_all.ui.theme.ErrorContainerColor
 import com.example.know_it_all.ui.theme.ErrorRed
 import com.example.know_it_all.ui.theme.NearBlack
@@ -75,6 +85,7 @@ import com.example.know_it_all.ui.theme.WarmGray
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -97,21 +108,25 @@ fun RadarScreenEnhanced(
 ) {
     val context = LocalContext.current
     val radarState by radarViewModel.uiState.collectAsState()
+    val scope = rememberCoroutineScope()
 
     var showMap by remember { mutableStateOf(true) }
+
+    // Sheet states
     var selectedUser by remember { mutableStateOf<User?>(null) }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var showRequestSheet by remember { mutableStateOf(false) }
+    var requestTargetUser by remember { mutableStateOf<User?>(null) }
+
+    val profileSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val requestSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
 
     val locationPermissionState = rememberPermissionState(
         Manifest.permission.ACCESS_FINE_LOCATION
     )
 
-    // ✅ OSMDroid MUST be configured before MapView is created
     LaunchedEffect(Unit) {
         Configuration.getInstance().apply {
-            // ✅ User agent is required — without this tiles return 403
             userAgentValue = context.packageName
-            // Cache tiles to internal storage — survives app restarts
             osmdroidBasePath = context.filesDir
             osmdroidTileCache = context.filesDir.resolve("osm_tiles")
         }
@@ -156,7 +171,6 @@ fun RadarScreenEnhanced(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Cream),
                 actions = {
-                    // Online filter toggle
                     IconButton(onClick = { radarViewModel.toggleOnlineFilter() }) {
                         Box(
                             modifier = Modifier
@@ -177,19 +191,16 @@ fun RadarScreenEnhanced(
                             )
                         }
                     }
-                    // Map / List toggle
                     IconButton(onClick = { showMap = !showMap }) {
                         Icon(
-                            imageVector = if (showMap) Icons.Default.List else Icons.Default.Map,
+                            imageVector = if (showMap) Icons.AutoMirrored.Filled.List
+                                          else Icons.Default.Map,
                             contentDescription = null,
                             tint = NearBlack,
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                    // Refresh
-                    IconButton(onClick = {
-                        radarViewModel.refreshLocationAndLoad(context)
-                    }) {
+                    IconButton(onClick = { radarViewModel.refreshLocationAndLoad(context) }) {
                         Icon(
                             Icons.Default.Refresh,
                             contentDescription = "Refresh",
@@ -212,7 +223,6 @@ fun RadarScreenEnhanced(
                     onRequest = { locationPermissionState.launchPermissionRequest() }
                 )
             } else if (showMap) {
-                // ✅ OSMDroid map with blue dot for current location
                 OSMMapView(
                     users = radarState.nearbyUsers,
                     currentLat = radarState.currentLat,
@@ -221,17 +231,12 @@ fun RadarScreenEnhanced(
                     context = context,
                     modifier = Modifier.fillMaxSize()
                 )
-
-                // Stats overlay at top of map
                 RadarStatsStrip(
                     count = radarState.nearbyUsers.size,
                     radiusKm = radarState.radiusKm,
                     isLoading = radarState.isLoading,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(12.dp)
+                    modifier = Modifier.align(Alignment.TopCenter).padding(12.dp)
                 )
-
                 radarState.error?.let { err ->
                     Box(
                         modifier = Modifier
@@ -260,23 +265,420 @@ fun RadarScreenEnhanced(
         }
     }
 
+    // ── Mentor profile sheet ──────────────────────────────────────────────────
     selectedUser?.let { user ->
         ModalBottomSheet(
             onDismissRequest = { selectedUser = null },
-            sheetState = sheetState,
+            sheetState = profileSheetState,
             containerColor = Cream
         ) {
             MentorProfileSheet(
                 user = user,
                 currentLat = radarState.currentLat,
                 currentLon = radarState.currentLon,
-                onDismiss = { selectedUser = null }
+                onDismiss = { selectedUser = null },
+                onConnect = {
+                    // ✅ Connect button → open request swap sheet
+                    requestTargetUser = user
+                    selectedUser = null
+                    showRequestSheet = true
+                }
+            )
+        }
+    }
+
+    // ── Request swap sheet ────────────────────────────────────────────────────
+    if (showRequestSheet && requestTargetUser != null) {
+        ModalBottomSheet(
+            onDismissRequest = { showRequestSheet = false },
+            sheetState = requestSheetState,
+            containerColor = Cream
+        ) {
+            RequestSwapSheet(
+                mentor = requestTargetUser!!,
+                currentUserId = userId,
+                onDismiss = { showRequestSheet = false },
+                onRequestSent = {
+                    showRequestSheet = false
+                    // Navigate to Trade screen to see the new request
+                    navController.navigate("trade") {
+                        launchSingleTop = true
+                    }
+                }
             )
         }
     }
 }
 
-// ── OSMDroid Map ──────────────────────────────────────────────────────────────
+// =============================================================================
+// Request Swap Sheet — the full swap request flow
+// =============================================================================
+
+@Composable
+private fun RequestSwapSheet(
+    mentor: User,
+    currentUserId: String,
+    onDismiss: () -> Unit,
+    onRequestSent: () -> Unit
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    // Repositories — used directly here since this is a one-shot action
+    val skillRepository = remember { FirebaseSkillRepository() }
+    val swapRepository  = remember { FirebaseSwapRepository() }
+
+    var mentorSkills by remember { mutableStateOf<List<Skill>>(emptyList()) }
+    var mySkills     by remember { mutableStateOf<List<Skill>>(emptyList()) }
+    var selectedMentorSkill by remember { mutableStateOf<Skill?>(null) }
+    var selectedMySkill     by remember { mutableStateOf<Skill?>(null) }
+    var selectedSwapType    by remember { mutableStateOf(SwapType.TOKEN) }
+    var tokenAmount  by remember { mutableStateOf(10L) }
+    var isLoading    by remember { mutableStateOf(false) }
+    var isSending    by remember { mutableStateOf(false) }
+    var error        by remember { mutableStateOf<String?>(null) }
+    var success      by remember { mutableStateOf(false) }
+
+    // Load both skill lists on open
+    LaunchedEffect(Unit) {
+        isLoading = true
+        skillRepository.getUserSkills(mentor.uid).onSuccess { mentorSkills = it }
+        skillRepository.getUserSkills(currentUserId).onSuccess { mySkills = it }
+        isLoading = false
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .padding(bottom = 40.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Header
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    "Request a Swap",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Black,
+                    color = NearBlack
+                )
+                Text(
+                    "with ${mentor.name}",
+                    fontSize = 14.sp,
+                    color = CharcoalGray
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .background(NearBlack, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    mentor.name.take(1).uppercase(),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Black,
+                    color = AcidGreen
+                )
+            }
+        }
+
+        if (isLoading) {
+            Box(Modifier.fillMaxWidth().height(80.dp), Alignment.Center) {
+                CircularProgressIndicator(color = NearBlack, strokeWidth = 2.dp,
+                    modifier = Modifier.size(24.dp))
+            }
+        } else if (success) {
+            // ── Success state ─────────────────────────────────────────────────
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text("✅", fontSize = 40.sp)
+                Text(
+                    "Request Sent!",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Black,
+                    color = NearBlack
+                )
+                Text(
+                    "${mentor.name} will be notified.\nCheck the Trade screen for updates.",
+                    fontSize = 14.sp,
+                    color = CharcoalGray,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 21.sp
+                )
+                Button(
+                    onClick = onRequestSent,
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(AcidGreen, NearBlack)
+                ) {
+                    Text("View in Trade", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                }
+            }
+        } else {
+            // ── Swap type selector ────────────────────────────────────────────
+            Column {
+                SectionLabel("Swap Type")
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SwapType.values().forEach { type ->
+                        val isSelected = selectedSwapType == type
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    if (isSelected) NearBlack else CreamDark,
+                                    RoundedCornerShape(10.dp)
+                                )
+                                .clickable { selectedSwapType = type }
+                                .padding(horizontal = 16.dp, vertical = 10.dp)
+                        ) {
+                            Text(
+                                type.name,
+                                fontSize = 13.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) AcidGreen else CharcoalGray
+                            )
+                        }
+                    }
+                }
+            }
+
+            // ── Mentor's skills (what you want to learn) ──────────────────────
+            Column {
+                SectionLabel("Skill you want to learn")
+                if (mentorSkills.isEmpty()) {
+                    Text(
+                        "${mentor.name} hasn't added any skills yet",
+                        fontSize = 13.sp,
+                        color = WarmGray
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(minOf(mentorSkills.size * 56, 168).dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        itemsIndexed(mentorSkills) { _, skill ->
+                            SkillSelectRow(
+                                skill = skill,
+                                isSelected = selectedMentorSkill?.skillId == skill.skillId,
+                                onClick = { selectedMentorSkill = skill }
+                            )
+                        }
+                    }
+                }
+            }
+
+            // ── Your skills (BARTER only) ─────────────────────────────────────
+            if (selectedSwapType == SwapType.BARTER || selectedSwapType == SwapType.HYBRID) {
+                Column {
+                    SectionLabel("Skill you offer in return")
+                    if (mySkills.isEmpty()) {
+                        Text(
+                            "You haven't added any skills yet.\nGo to Skill Profile to add one.",
+                            fontSize = 13.sp,
+                            color = WarmGray,
+                            lineHeight = 20.sp
+                        )
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(minOf(mySkills.size * 56, 168).dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            itemsIndexed(mySkills) { _, skill ->
+                                SkillSelectRow(
+                                    skill = skill,
+                                    isSelected = selectedMySkill?.skillId == skill.skillId,
+                                    onClick = { selectedMySkill = skill }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ── Token amount (TOKEN or HYBRID) ────────────────────────────────
+            if (selectedSwapType == SwapType.TOKEN || selectedSwapType == SwapType.HYBRID) {
+                Column {
+                    SectionLabel("Token amount to offer")
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        listOf(5L, 10L, 20L, 50L).forEach { amount ->
+                            val isSelected = tokenAmount == amount
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        if (isSelected) AcidGreen else CreamDark,
+                                        RoundedCornerShape(10.dp)
+                                    )
+                                    .clickable { tokenAmount = amount }
+                                    .padding(horizontal = 16.dp, vertical = 10.dp)
+                            ) {
+                                Text(
+                                    "${amount}T",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) NearBlack else CharcoalGray
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ── Error ─────────────────────────────────────────────────────────
+            error?.let {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(ErrorContainerColor, RoundedCornerShape(10.dp))
+                        .padding(12.dp)
+                ) {
+                    Text(it, fontSize = 13.sp, color = ErrorRed)
+                }
+            }
+
+            // ── Send button ───────────────────────────────────────────────────
+            Button(
+                onClick = {
+                    // Validate
+                    if (selectedMentorSkill == null) {
+                        error = "Please select a skill to learn"
+                        return@Button
+                    }
+                    if ((selectedSwapType == SwapType.BARTER ||
+                         selectedSwapType == SwapType.HYBRID) &&
+                        selectedMySkill == null) {
+                        error = "Please select a skill to offer"
+                        return@Button
+                    }
+
+                    error = null
+                    isSending = true
+
+                    scope.launch {
+                        val request = SwapRequestBody(
+                            mentorId      = mentor.uid,
+                            learnerId     = currentUserId,
+                            mentorSkillId = selectedMentorSkill!!.skillId,
+                            learnerSkillId = selectedMySkill?.skillId,
+                            swapType      = selectedSwapType,
+                            tokenAmount   = if (selectedSwapType == SwapType.TOKEN ||
+                                               selectedSwapType == SwapType.HYBRID)
+                                            tokenAmount else 0L
+                        )
+
+                        swapRepository.requestSwap(request).fold(
+                            onSuccess = { success = true },
+                            onFailure = { e ->
+                                error = e.message ?: "Failed to send request"
+                            }
+                        )
+                        isSending = false
+                    }
+                },
+                enabled = !isSending,
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = AcidGreen,
+                    contentColor = NearBlack,
+                    disabledContainerColor = CreamDark,
+                    disabledContentColor = WarmGray
+                )
+            ) {
+                if (isSending) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        color = NearBlack,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("Sending...", fontWeight = FontWeight.Bold)
+                } else {
+                    Text("Send Request", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                }
+            }
+
+            OutlinedButton(
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth().height(44.dp),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Text("Cancel", color = CharcoalGray)
+            }
+        }
+    }
+}
+
+@Composable
+private fun SkillSelectRow(skill: Skill, isSelected: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                if (isSelected) NearBlack else CreamDark,
+                RoundedCornerShape(12.dp)
+            )
+            .clickable(onClick = onClick)
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .background(
+                    if (isSelected) AcidGreen else WarmGray,
+                    CircleShape
+                )
+        )
+        Column(Modifier.weight(1f)) {
+            Text(
+                skill.skillName,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = if (isSelected) Cream else NearBlack
+            )
+            Text(
+                "${skill.proficiencyLevel.name} · ${skill.tokenValue}T",
+                fontSize = 11.sp,
+                color = if (isSelected) WarmGray else CharcoalGray
+            )
+        }
+        if (isSelected) {
+            Text("✓", fontSize = 14.sp, color = AcidGreen, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun SectionLabel(text: String) {
+    Text(
+        text,
+        fontSize = 12.sp,
+        fontWeight = FontWeight.SemiBold,
+        color = CharcoalGray,
+        letterSpacing = 0.5.sp,
+        modifier = Modifier.padding(bottom = 6.dp)
+    )
+}
+
+// =============================================================================
+// OSMDroid Map
+// =============================================================================
 
 @Composable
 private fun OSMMapView(
@@ -287,20 +689,17 @@ private fun OSMMapView(
     context: Context,
     modifier: Modifier = Modifier
 ) {
-    // Default to Pimpri-Chinchwad if GPS not yet available
     val centerLat = if (currentLat != 0.0) currentLat else 18.6298
     val centerLon = if (currentLon != 0.0) currentLon else 73.7997
 
     val mapView = remember {
         MapView(context).apply {
-            // ✅ MAPNIK = standard OpenStreetMap tiles, free, no API key
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
             controller.setZoom(15.0)
             controller.setCenter(GeoPoint(centerLat, centerLon))
             minZoomLevel = 4.0
             maxZoomLevel = 19.0
-            // ✅ Enable built-in "blue dot" for current location
             val myLocationOverlay = MyLocationNewOverlay(
                 GpsMyLocationProvider(context), this
             )
@@ -309,14 +708,10 @@ private fun OSMMapView(
         }
     }
 
-    // Add mentor markers whenever users list changes
     LaunchedEffect(users, currentLat, currentLon) {
-        // Remove old markers (keep index 0 = MyLocationOverlay)
         if (mapView.overlays.size > 1) {
             mapView.overlays.subList(1, mapView.overlays.size).clear()
         }
-
-        // Add mentor pins
         users.forEach { user ->
             if (user.latitude != 0.0 && user.longitude != 0.0) {
                 val marker = Marker(mapView).apply {
@@ -337,30 +732,19 @@ private fun OSMMapView(
                 mapView.overlays.add(marker)
             }
         }
-
-        // Pan to current location when available
         if (currentLat != 0.0) {
             mapView.controller.animateTo(GeoPoint(currentLat, currentLon))
         }
-
         mapView.invalidate()
     }
 
-    // ✅ Resume/pause map with composable lifecycle to save battery
     DisposableEffect(Unit) {
         mapView.onResume()
-        onDispose {
-            mapView.onPause()
-        }
+        onDispose { mapView.onPause() }
     }
 
-    AndroidView(
-        factory = { mapView },
-        modifier = modifier
-    )
+    AndroidView(factory = { mapView }, modifier = modifier)
 }
-
-// ── Marker bitmap — initials circle ──────────────────────────────────────────
 
 private fun createInitialsMarker(
     context: Context,
@@ -371,34 +755,23 @@ private fun createInitialsMarker(
     val size = 96
     val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
-
     val bgColor = if (isMe) android.graphics.Color.parseColor("#AAFF00")
                   else android.graphics.Color.parseColor("#1A1A1A")
     val textColor = if (isMe) android.graphics.Color.parseColor("#1A1A1A")
                    else android.graphics.Color.parseColor("#F5F0E8")
-
-    // Background circle
     canvas.drawCircle(size / 2f, size / 2f, size / 2f - 2f,
         Paint(Paint.ANTI_ALIAS_FLAG).apply { color = bgColor })
-
-    // White border
     canvas.drawCircle(size / 2f, size / 2f, size / 2f - 2f,
         Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = android.graphics.Color.WHITE
-            style = Paint.Style.STROKE
-            strokeWidth = 3f
+            style = Paint.Style.STROKE; strokeWidth = 3f
         })
-
-    // Initials text
     val tp = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = textColor
-        textSize = 36f
+        color = textColor; textSize = 36f
         typeface = android.graphics.Typeface.DEFAULT_BOLD
         textAlign = Paint.Align.CENTER
     }
     canvas.drawText(initials, size / 2f, size / 2f - (tp.descent() + tp.ascent()) / 2f, tp)
-
-    // Online indicator dot
     if (isOnline) {
         canvas.drawCircle(size - 14f, 14f, 10f,
             Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -407,15 +780,93 @@ private fun createInitialsMarker(
         canvas.drawCircle(size - 14f, 14f, 10f,
             Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = android.graphics.Color.WHITE
-                style = Paint.Style.STROKE
-                strokeWidth = 2f
+                style = Paint.Style.STROKE; strokeWidth = 2f
             })
     }
-
     return BitmapDrawable(context.resources, bitmap)
 }
 
-// ── List view ─────────────────────────────────────────────────────────────────
+// =============================================================================
+// Supporting composables
+// =============================================================================
+
+@Composable
+private fun MentorProfileSheet(
+    user: User,
+    currentLat: Double,
+    currentLon: Double,
+    onDismiss: () -> Unit,
+    onConnect: () -> Unit           // ✅ now triggers swap request flow
+) {
+    val distance = calculateDistanceKm(currentLat, currentLon, user.latitude, user.longitude)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .padding(bottom = 40.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Box(
+                modifier = Modifier.size(72.dp).background(NearBlack, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    user.name.take(1).uppercase(),
+                    fontSize = 30.sp, fontWeight = FontWeight.Black, color = AcidGreen
+                )
+            }
+            Column(Modifier.weight(1f)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(user.name, fontSize = 20.sp, fontWeight = FontWeight.Black, color = NearBlack)
+                    if (user.isOnline) Box(Modifier.size(8.dp).background(AcidGreen, CircleShape))
+                }
+                Text("${String.format("%.1f", distance)} km away", fontSize = 13.sp, color = CharcoalGray)
+                Text(
+                    "★ ${String.format("%.1f", user.trustScore)} · ${user.skillTokenBalance} tokens",
+                    fontSize = 12.sp, color = Ochre, fontWeight = FontWeight.Medium
+                )
+            }
+        }
+
+        if (user.profileVerified) {
+            Box(
+                modifier = Modifier
+                    .background(AcidGreen.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
+                    .border(1.dp, AcidGreen.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+            ) {
+                Text("✓ Verified Profile", fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold, color = NearBlack)
+            }
+        }
+
+        // ✅ Connect now opens the Request Swap sheet
+        Button(
+            onClick = onConnect,
+            modifier = Modifier.fillMaxWidth().height(52.dp),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(AcidGreen, NearBlack)
+        ) {
+            Text("Connect & Request Swap", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+        }
+
+        OutlinedButton(
+            onClick = onDismiss,
+            modifier = Modifier.fillMaxWidth().height(44.dp),
+            shape = RoundedCornerShape(14.dp)
+        ) {
+            Text("Close", color = CharcoalGray)
+        }
+    }
+}
 
 @Composable
 private fun MentorListView(
@@ -429,7 +880,6 @@ private fun MentorListView(
 ) {
     Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         RadarStatsStrip(users.size, 5.0, isLoading, Modifier.padding(vertical = 8.dp))
-
         error?.let {
             Column(
                 modifier = Modifier
@@ -439,21 +889,17 @@ private fun MentorListView(
             ) {
                 Text(it, fontSize = 12.sp, color = ErrorRed)
                 Spacer(Modifier.height(8.dp))
-                Button(
-                    onClick = onRetry,
+                Button(onClick = onRetry,
                     colors = ButtonDefaults.buttonColors(NearBlack, Cream),
                     shape = RoundedCornerShape(8.dp)
                 ) { Text("Retry", fontSize = 13.sp) }
             }
         }
-
         if (!isLoading && users.isEmpty() && error == null) RadarEmptyState()
-
         users.forEach { user ->
             MentorListCard(
                 user = user,
-                distanceKm = calculateDistanceKm(
-                    currentLat, currentLon, user.latitude, user.longitude),
+                distanceKm = calculateDistanceKm(currentLat, currentLon, user.latitude, user.longitude),
                 onClick = { onUserTap(user) }
             )
             Spacer(Modifier.height(10.dp))
@@ -471,139 +917,29 @@ private fun MentorListCard(user: User, distanceKm: Double, onClick: () -> Unit) 
             .clickable(onClick = onClick)
             .padding(16.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Box(
-                modifier = Modifier.size(48.dp).background(AcidGreen, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    user.name.take(1).uppercase(),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Black,
-                    color = NearBlack
-                )
+        Row(verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Box(modifier = Modifier.size(48.dp).background(AcidGreen, CircleShape),
+                contentAlignment = Alignment.Center) {
+                Text(user.name.take(1).uppercase(), fontSize = 20.sp,
+                    fontWeight = FontWeight.Black, color = NearBlack)
             }
             Column(Modifier.weight(1f)) {
                 Text(user.name, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Cream)
-                Text(
-                    "${String.format("%.1f", distanceKm)} km · ${user.skillTokenBalance}T",
-                    fontSize = 12.sp,
-                    color = WarmGray
-                )
+                Text("${String.format("%.1f", distanceKm)} km · ${user.skillTokenBalance}T",
+                    fontSize = 12.sp, color = WarmGray)
             }
-            if (user.isOnline) {
-                Box(Modifier.size(10.dp).background(AcidGreen, CircleShape))
-            }
+            if (user.isOnline) Box(Modifier.size(10.dp).background(AcidGreen, CircleShape))
         }
     }
 }
-
-// ── Profile bottom sheet ──────────────────────────────────────────────────────
-
-@Composable
-private fun MentorProfileSheet(
-    user: User,
-    currentLat: Double,
-    currentLon: Double,
-    onDismiss: () -> Unit
-) {
-    val distance = calculateDistanceKm(currentLat, currentLon, user.latitude, user.longitude)
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp)
-            .padding(bottom = 40.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Box(
-                modifier = Modifier.size(72.dp).background(NearBlack, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    user.name.take(1).uppercase(),
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.Black,
-                    color = AcidGreen
-                )
-            }
-            Column(Modifier.weight(1f)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        user.name,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Black,
-                        color = NearBlack
-                    )
-                    if (user.isOnline) {
-                        Box(Modifier.size(8.dp).background(AcidGreen, CircleShape))
-                    }
-                }
-                Text(
-                    "${String.format("%.1f", distance)} km away",
-                    fontSize = 13.sp,
-                    color = CharcoalGray
-                )
-                Text(
-                    "★ ${String.format("%.1f", user.trustScore)} · ${user.skillTokenBalance} tokens",
-                    fontSize = 12.sp,
-                    color = Ochre,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        if (user.profileVerified) {
-            Box(
-                modifier = Modifier
-                    .background(AcidGreen.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
-                    .border(1.dp, AcidGreen.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
-            ) {
-                Text(
-                    "✓ Verified Profile",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = NearBlack
-                )
-            }
-            Spacer(Modifier.height(12.dp))
-        }
-
-        Button(
-            onClick = onDismiss,
-            modifier = Modifier.fillMaxWidth().height(52.dp),
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(AcidGreen, NearBlack)
-        ) {
-            Text("Connect", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-        }
-    }
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
 
 @Composable
 private fun RadarStatsStrip(
-    count: Int,
-    radiusKm: Double,
-    isLoading: Boolean,
-    modifier: Modifier = Modifier
+    count: Int, radiusKm: Double, isLoading: Boolean, modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
             .background(Cream.copy(alpha = 0.95f), RoundedCornerShape(14.dp))
             .border(1.dp, CreamDark, RoundedCornerShape(14.dp))
             .padding(horizontal = 16.dp, vertical = 12.dp),
@@ -611,55 +947,30 @@ private fun RadarStatsStrip(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column {
-            Text(
-                if (isLoading) "Scanning..." else "$count people found",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                color = NearBlack
-            )
-            Text(
-                "Within ${radiusKm}km radius",
-                fontSize = 12.sp,
-                color = CharcoalGray
-            )
+            Text(if (isLoading) "Scanning..." else "$count people found",
+                fontSize = 15.sp, fontWeight = FontWeight.Bold, color = NearBlack)
+            Text("Within ${radiusKm}km radius", fontSize = 12.sp, color = CharcoalGray)
         }
-        Box(
-            Modifier.size(8.dp).background(
-                if (isLoading) Ochre else AcidGreen, CircleShape
-            )
-        )
+        Box(Modifier.size(8.dp).background(if (isLoading) Ochre else AcidGreen, CircleShape))
     }
 }
 
 @Composable
 private fun LocationPermissionPrompt(onRequest: () -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(32.dp),
+    Column(modifier = Modifier.fillMaxSize().padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
+        verticalArrangement = Arrangement.Center) {
         Text("📍", fontSize = 48.sp)
         Spacer(Modifier.height(20.dp))
-        Text(
-            "Enable Location",
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Black,
-            color = NearBlack
-        )
+        Text("Enable Location", fontSize = 26.sp, fontWeight = FontWeight.Black, color = NearBlack)
         Spacer(Modifier.height(8.dp))
-        Text(
-            "We need your location to find\nnearby mentors on the map.",
-            fontSize = 14.sp,
-            color = CharcoalGray,
-            lineHeight = 21.sp
-        )
+        Text("We need your location to find\nnearby mentors on the map.",
+            fontSize = 14.sp, color = CharcoalGray, lineHeight = 21.sp)
         Spacer(Modifier.height(32.dp))
-        Button(
-            onClick = onRequest,
+        Button(onClick = onRequest,
             modifier = Modifier.fillMaxWidth().height(52.dp),
             shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(AcidGreen, NearBlack)
-        ) {
+            colors = ButtonDefaults.buttonColors(AcidGreen, NearBlack)) {
             Text("Grant Permission", fontWeight = FontWeight.Bold)
         }
     }
@@ -667,31 +978,19 @@ private fun LocationPermissionPrompt(onRequest: () -> Unit) {
 
 @Composable
 private fun RadarEmptyState() {
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 48.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 48.dp),
+        horizontalAlignment = Alignment.CenterHorizontally) {
         Text("🔍", fontSize = 40.sp)
         Spacer(Modifier.height(12.dp))
-        Text(
-            "No mentors nearby",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Black,
-            color = NearBlack
-        )
+        Text("No mentors nearby", fontSize = 20.sp, fontWeight = FontWeight.Black, color = NearBlack)
         Spacer(Modifier.height(6.dp))
-        Text(
-            "Try increasing the radius\nor check back later",
-            fontSize = 13.sp,
-            color = CharcoalGray,
-            lineHeight = 20.sp
-        )
+        Text("Try increasing the radius\nor check back later",
+            fontSize = 13.sp, color = CharcoalGray, lineHeight = 20.sp)
     }
 }
 
 private fun calculateDistanceKm(
-    lat1: Double, lon1: Double,
-    lat2: Double, lon2: Double
+    lat1: Double, lon1: Double, lat2: Double, lon2: Double
 ): Double {
     if (lat1 == 0.0 || lat2 == 0.0) return 0.0
     val r = 6371.0

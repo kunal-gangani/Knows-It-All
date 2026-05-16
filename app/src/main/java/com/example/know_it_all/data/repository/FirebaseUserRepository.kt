@@ -158,26 +158,23 @@ class FirebaseUserRepository {
     ): Result<List<User>> {
         return try {
             val latDelta = radiusKm / 111.0
-            val lonDelta = radiusKm / 105.0
 
+            // ✅ Only filter on latitude — avoids composite index requirement
+            // Then filter uid and longitude client-side
             val snapshot = usersCollection
-                .whereGreaterThan("latitude",  latitude  - latDelta)
-                .whereLessThan("latitude",     latitude  + latDelta)
-                .whereNotEqualTo("uid", currentUserId)
+                .whereGreaterThan("latitude", latitude - latDelta)
+                .whereLessThan("latitude", latitude + latDelta)
                 .get().await()
 
+            val lonDelta = radiusKm / 105.0
             val users = snapshot.documents
                 .mapNotNull { it.toUser() }
                 .filter { user ->
-                    // Haversine true circle filter
-                    calculateDistanceKm(
-                        latitude, longitude,
-                        user.latitude, user.longitude
-                    ) <= radiusKm
-                    // Also filter by longitude since Firestore only supports
-                    // one range filter per query
-                    && user.longitude >= longitude - lonDelta
-                    && user.longitude <= longitude + lonDelta
+                    user.uid != currentUserId &&
+                    user.longitude >= longitude - lonDelta &&
+                    user.longitude <= longitude + lonDelta &&
+                    calculateDistanceKm(latitude, longitude,
+                        user.latitude, user.longitude) <= radiusKm
                 }
 
             Result.success(users)
