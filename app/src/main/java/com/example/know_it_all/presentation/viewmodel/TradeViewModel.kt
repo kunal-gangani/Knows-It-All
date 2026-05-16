@@ -94,6 +94,21 @@ class TradeViewModel(
         }
     }
 
+    // ── Accept swap ───────────────────────────────────────────────────────────
+
+    fun acceptSwap(swapId: String) {
+        viewModelScope.launch {
+            swapRepository.acceptSwap(swapId).fold(
+                onSuccess = { loadActiveSwaps() },
+                onFailure = { e ->
+                    _uiState.value = _uiState.value.copy(
+                        error = e.message ?: "Failed to accept swap"
+                    )
+                }
+            )
+        }
+    }
+
     // ── Complete swap ─────────────────────────────────────────────────────────
 
     fun completeSwap(swapId: String) {

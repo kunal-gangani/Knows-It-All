@@ -85,9 +85,11 @@ fun TradeScreenEnhanced(
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val tradeState by tradeViewModel.uiState.collectAsState()
+    var ratingSwap by remember { mutableStateOf<SwapDTO?>(null) }
+    val ratingSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     LaunchedEffect(Unit) {
-        tradeViewModel.loadActiveSwaps()   // ✅ no token param
+        tradeViewModel.loadActiveSwaps()
     }
 
     LaunchedEffect(selectedTab) {
@@ -153,7 +155,27 @@ fun TradeScreenEnhanced(
                 .background(Cream)
                 .padding(innerPadding)
         ) {
-            // Segmented tab control — pill style, not Material TabRow
+            // ── Rating sheet — shown after completing a swap ─────────────────────────
+    ratingSwap?.let { swap ->
+        if (swap.learnerId == userId) {  // only learner rates the mentor
+            ModalBottomSheet(
+                onDismissRequest = { ratingSwap = null },
+                sheetState = ratingSheetState,
+                containerColor = Cream
+            ) {
+                RatingSheet(
+                    swap = swap,
+                    onSubmit = { rating, comment ->
+                        tradeViewModel.rateSwap(swap.swapId, rating, comment)
+                        ratingSwap = null
+                    },
+                    onSkip = { ratingSwap = null }
+                )
+            }
+        }
+    }
+
+    // Segmented tab control — pill style, not Material TabRow
             SegmentedTabControl(
                 tabs = listOf("Active", "History"),
                 selectedIndex = selectedTab,
@@ -191,7 +213,11 @@ fun TradeScreenEnhanced(
                             SwapCard(
                                 swap = swap,
                                 currentUserId = userId,
-                                onComplete = { tradeViewModel.completeSwap(swap.swapId) },
+                                onAccept = { tradeViewModel.acceptSwap(swap.swapId) },
+                                onComplete = {
+                                    tradeViewModel.completeSwap(swap.swapId)
+                                    ratingSwap = swap
+                                },
                                 onCancel = { tradeViewModel.cancelSwap(swap.swapId) }
                             )
                         }
@@ -211,6 +237,7 @@ fun TradeScreenEnhanced(
 private fun SwapCard(
     swap: SwapDTO,
     currentUserId: String,
+    onAccept: () -> Unit,
     onComplete: () -> Unit,
     onCancel: () -> Unit
 ) {
@@ -304,26 +331,70 @@ private fun SwapCard(
                 }
             }
 
-            // Action buttons — only for actionable statuses
-            if (swap.status == SwapStatus.ACTIVE || swap.status == SwapStatus.REQUESTED) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (swap.status == SwapStatus.ACTIVE) {
+            // ── Action buttons — role-aware ───────────────────────────────
+            Spacer(modifier = Modifier.height(12.dp))
+            when {
+                // REQUESTED: mentor sees Accept + Decline, learner sees Cancel
+                swap.status == SwapStatus.REQUESTED && isMentor -> {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         ActionChip(
-                            label = "Complete",
+                            label = "Accept",
                             icon = Icons.Default.Check,
                             containerColor = AcidGreen,
                             contentColor = NearBlack,
-                            onClick = onComplete
+                            onClick = onAccept
+                        )
+                        ActionChip(
+                            label = "Decline",
+                            icon = Icons.Default.Close,
+                            containerColor = CreamDeep,
+                            contentColor = CharcoalGray,
+                            onClick = onCancel
                         )
                     }
+                }
+                swap.status == SwapStatus.REQUESTED && !isMentor -> {
                     ActionChip(
-                        label = "Cancel",
+                        label = "Cancel Request",
                         icon = Icons.Default.Close,
                         containerColor = CreamDeep,
                         contentColor = CharcoalGray,
                         onClick = onCancel
                     )
+                }
+                // ACTIVE: both see "Mark Complete", either can cancel
+                swap.status == SwapStatus.ACTIVE -> {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        // Session info
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(AcidGreen.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
+                                .padding(10.dp)
+                        ) {
+                            Text(
+                                text = "✅ Session accepted — complete it then mark done",
+                                fontSize = 11.sp,
+                                color = NearBlack
+                            )
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            ActionChip(
+                                label = "Mark Complete",
+                                icon = Icons.Default.Check,
+                                containerColor = AcidGreen,
+                                contentColor = NearBlack,
+                                onClick = onComplete
+                            )
+                            ActionChip(
+                                label = "Cancel",
+                                icon = Icons.Default.Close,
+                                containerColor = CreamDeep,
+                                contentColor = CharcoalGray,
+                                onClick = onCancel
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -429,5 +500,85 @@ private fun TradeEmptyState(isActive: Boolean) {
             color = CharcoalGray,
             lineHeight = 20.sp
         )
+    }
+}
+
+// =============================================================================
+// Rating Sheet — shown to learner after marking swap complete
+// =============================================================================
+
+@Composable
+private fun RatingSheet(
+    swap: SwapDTO,
+    onSubmit: (Int, String) -> Unit,
+    onSkip: () -> Unit
+) {
+    var selectedRating by remember { mutableIntStateOf(0) }
+    var comment by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .padding(bottom = 40.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            "Rate your session",
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Black,
+            color = NearBlack
+        )
+        Text(
+            "How was your swap with ${swap.mentorName}?",
+            fontSize = 14.sp,
+            color = CharcoalGray
+        )
+
+        // Star selector
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            (1..5).forEach { star ->
+                Text(
+                    text = if (star <= selectedRating) "★" else "☆",
+                    fontSize = 36.sp,
+                    color = if (star <= selectedRating) Ochre else WarmGray,
+                    modifier = Modifier.clickable { selectedRating = star }
+                )
+            }
+        }
+
+        // Comment
+        androidx.compose.material3.OutlinedTextField(
+            value = comment,
+            onValueChange = { comment = it },
+            placeholder = { Text("Leave a comment (optional)", color = WarmGray) },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            maxLines = 3
+        )
+
+        Button(
+            onClick = {
+                if (selectedRating > 0) onSubmit(selectedRating, comment)
+            },
+            enabled = selectedRating > 0,
+            modifier = Modifier.fillMaxWidth().height(52.dp),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = AcidGreen,
+                contentColor = NearBlack,
+                disabledContainerColor = CreamDark,
+                disabledContentColor = WarmGray
+            )
+        ) {
+            Text("Submit Rating", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+        }
+
+        TextButton(
+            onClick = onSkip,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Skip for now", color = CharcoalGray)
+        }
     }
 }
