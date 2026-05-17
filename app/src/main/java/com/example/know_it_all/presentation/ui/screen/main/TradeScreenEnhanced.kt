@@ -48,6 +48,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -155,26 +162,6 @@ fun TradeScreenEnhanced(
                 .background(Cream)
                 .padding(innerPadding)
         ) {
-            // ── Rating sheet — shown after completing a swap ─────────────────────────
-    ratingSwap?.let { swap ->
-        if (swap.learnerId == userId) {  // only learner rates the mentor
-            ModalBottomSheet(
-                onDismissRequest = { ratingSwap = null },
-                sheetState = ratingSheetState,
-                containerColor = Cream
-            ) {
-                RatingSheet(
-                    swap = swap,
-                    onSubmit = { rating, comment ->
-                        tradeViewModel.rateSwap(swap.swapId, rating, comment)
-                        ratingSwap = null
-                    },
-                    onSkip = { ratingSwap = null }
-                )
-            }
-        }
-    }
-
     // Segmented tab control — pill style, not Material TabRow
             SegmentedTabControl(
                 tabs = listOf("Active", "History"),
@@ -224,6 +211,26 @@ fun TradeScreenEnhanced(
                     }
                     item { Spacer(modifier = Modifier.height(24.dp)) }
                 }
+            }
+        }
+    }
+
+    // ── Rating sheet — outside Scaffold, inside composable ───────────────────
+    ratingSwap?.let { swap ->
+        if (swap.learnerId == userId) {
+            ModalBottomSheet(
+                onDismissRequest = { ratingSwap = null },
+                sheetState = ratingSheetState,
+                containerColor = Cream
+            ) {
+                RatingSheet(
+                    swap = swap,
+                    onSubmit = { rating, comment ->
+                        tradeViewModel.rateSwap(swap.swapId, rating, comment)
+                        ratingSwap = null
+                    },
+                    onSkip = { ratingSwap = null }
+                )
             }
         }
     }
