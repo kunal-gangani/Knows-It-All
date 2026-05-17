@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -81,12 +80,9 @@ fun ChatScreen(
         chatViewModel.observeMessages(swapId)
     }
 
-    // Auto-scroll to latest message
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
-            scope.launch {
-                listState.animateScrollToItem(messages.size - 1)
-            }
+            scope.launch { listState.animateScrollToItem(messages.size - 1) }
         }
     }
 
@@ -97,16 +93,12 @@ fun ChatScreen(
                 title = {
                     Column {
                         Text(
-                            text = counterpartName,
+                            counterpartName,
                             fontSize = 17.sp,
                             fontWeight = FontWeight.Black,
                             color = NearBlack
                         )
-                        Text(
-                            text = swapSkillName,
-                            fontSize = 12.sp,
-                            color = CharcoalGray
-                        )
+                        Text(swapSkillName, fontSize = 12.sp, color = CharcoalGray)
                     }
                 },
                 navigationIcon = {
@@ -128,7 +120,6 @@ fun ChatScreen(
                 .padding(innerPadding)
                 .imePadding()
         ) {
-            // Messages list
             LazyColumn(
                 state = listState,
                 modifier = Modifier
@@ -164,13 +155,11 @@ fun ChatScreen(
                         }
                     }
                 }
-
                 items(messages, key = { it.messageId }) { message ->
-                    val isMe = message.senderId == currentUserId
                     MessageBubble(
                         text = message.text,
-                        isMe = isMe,
-                        senderName = if (isMe) "You" else counterpartName,
+                        isMe = message.senderId == currentUserId,
+                        counterpartName = counterpartName,
                         timestamp = message.timestamp
                     )
                 }
@@ -203,17 +192,11 @@ fun ChatScreen(
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(onSend = {
                         if (messageText.isNotBlank()) {
-                            chatViewModel.sendMessage(
-                                swapId = swapId,
-                                senderId = currentUserId,
-                                text = messageText.trim()
-                            )
+                            chatViewModel.sendMessage(swapId, currentUserId, messageText.trim())
                             messageText = ""
                         }
                     })
                 )
-
-                // Send button
                 Box(
                     modifier = Modifier
                         .size(44.dp)
@@ -221,26 +204,15 @@ fun ChatScreen(
                             if (messageText.isNotBlank()) NearBlack else WarmGray,
                             CircleShape
                         )
-                        .clip(CircleShape)
-                        .then(
-                            if (messageText.isNotBlank())
-                                Modifier.padding(0.dp)
-                            else Modifier
-                        ),
+                        .clip(CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    IconButton(
-                        onClick = {
-                            if (messageText.isNotBlank()) {
-                                chatViewModel.sendMessage(
-                                    swapId = swapId,
-                                    senderId = currentUserId,
-                                    text = messageText.trim()
-                                )
-                                messageText = ""
-                            }
+                    IconButton(onClick = {
+                        if (messageText.isNotBlank()) {
+                            chatViewModel.sendMessage(swapId, currentUserId, messageText.trim())
+                            messageText = ""
                         }
-                    ) {
+                    }) {
                         Icon(
                             Icons.AutoMirrored.Filled.Send,
                             contentDescription = "Send",
@@ -258,13 +230,12 @@ fun ChatScreen(
 private fun MessageBubble(
     text: String,
     isMe: Boolean,
-    senderName: String,
+    counterpartName: String,
     timestamp: Long
 ) {
     val timeStr = remember(timestamp) {
         SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp))
     }
-
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = if (isMe) Alignment.End else Alignment.Start
@@ -275,8 +246,7 @@ private fun MessageBubble(
                 .background(
                     if (isMe) NearBlack else CreamDark,
                     RoundedCornerShape(
-                        topStart = 16.dp,
-                        topEnd = 16.dp,
+                        topStart = 16.dp, topEnd = 16.dp,
                         bottomStart = if (isMe) 16.dp else 4.dp,
                         bottomEnd = if (isMe) 4.dp else 16.dp
                     )
@@ -291,10 +261,6 @@ private fun MessageBubble(
             )
         }
         Spacer(Modifier.height(2.dp))
-        Text(
-            text = timeStr,
-            fontSize = 10.sp,
-            color = WarmGray
-        )
+        Text(timeStr, fontSize = 10.sp, color = WarmGray)
     }
 }
