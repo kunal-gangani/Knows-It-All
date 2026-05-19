@@ -13,7 +13,8 @@ class ViewModelFactory(
     private val skillRepository: FirebaseSkillRepository? = null,
     private val swapRepository: FirebaseSwapRepository? = null,
     private val ledgerRepository: FirebaseLedgerRepository? = null,
-    private val sessionManager: SessionManager? = null
+    private val sessionManager: SessionManager? = null,
+    private val chatRepository: FirebaseChatRepository? = null
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -43,6 +44,13 @@ class ViewModelFactory(
                     skillRepository  = requireNotNull(skillRepository),
                     userRepository   = requireNotNull(userRepository),
                     sessionManager   = requireNotNull(sessionManager)
+                ) as T
+            }
+            modelClass.isAssignableFrom(ChatViewModel::class.java) -> {
+                ChatViewModel(
+                    chatRepository = requireNotNull(chatRepository) {
+                    "chatRepository required for ChatViewModel"
+                }
                 ) as T
             }
             modelClass.isAssignableFrom(SkillViewModel::class.java) -> {
