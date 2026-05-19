@@ -16,7 +16,8 @@ data class TradeUiState(
     val swapHistory: List<SwapDTO> = emptyList(),
     val pendingRequestCount: Int = 0,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val successMessage: String? = null
 )
 
 class TradeViewModel(
@@ -34,8 +35,6 @@ class TradeViewModel(
         loadActiveSwaps()
     }
 
-    // ── Real-time pending count ────────────────────────────────────────────────
-
     private fun observePendingCount() {
         viewModelScope.launch {
             swapRepository.observePendingCount(userId).collect { count ->
@@ -44,102 +43,153 @@ class TradeViewModel(
         }
     }
 
-    // ── Load active swaps ─────────────────────────────────────────────────────
-
     fun loadActiveSwaps() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-
-            // Observe real-time active swaps
             swapRepository.observeActiveSwaps(userId).collect { swaps ->
-                _uiState.value = _uiState.value.copy(
-                    activeSwaps = swaps,
-                    isLoading = false
-                )
+                _uiState.value = _uiState.value.copy(activeSwaps = swaps, isLoading = false)
             }
         }
     }
 
-    // ── Load swap history ─────────────────────────────────────────────────────
-
     fun loadSwapHistory() {
         viewModelScope.launch {
             swapRepository.getSwapHistory(userId).fold(
-                onSuccess = { history ->
-                    _uiState.value = _uiState.value.copy(swapHistory = history)
-                },
+                onSuccess = { _uiState.value = _uiState.value.copy(swapHistory = it) },
                 onFailure = { e ->
-                    _uiState.value = _uiState.value.copy(
-                        error = e.message ?: "Failed to load history"
-                    )
+                    _uiState.value = _uiState.value.copy(error = e.message ?: "Failed to load history")
                 }
             )
         }
     }
-
-    // ── Request swap ──────────────────────────────────────────────────────────
 
     fun requestSwap(request: SwapRequestBody) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             swapRepository.requestSwap(request).fold(
-                onSuccess = { loadActiveSwaps() },
+                onSuccess = {
+                    _uiState.value = _uiState.value.copy(isLoading = false,
+                        successMessage = "Swap request sent!")
+                },
                 onFailure = { e ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = e.message ?: "Failed to request swap"
-                    )
+                    _uiState.value = _uiState.value.copy(isLoading = false,
+                        error = e.message ?: "Failed to request swap")
                 }
             )
         }
     }
 
-    // ── Complete swap ─────────────────────────────────────────────────────────
+    fun acceptSwap(swapId: String) {
+        viewModelScope.launch {
+            swapRepository.acceptSwap(swapId).fold(
+                onSuccess = {
+                    _uiState.value = _uiState.value.copy(
+                        successMessage = "Swap accepted! Tokens locked in escrow.")
+                },
+                onFailure = { e ->
+                    _uiState.value = _uiState.value.copy(
+                        error = e.message ?: "Failed to accept swap")
+                }
+            )
+        }
+    }
+
+    fun completeSession(swapId: String) {
+        viewModelScope.launch {
+            swapRepository.completeSession(swapId).fold(
+                onSuccess = { swap ->
+                    val msg = if (swap.isSessionComplete)
+                        "All sessions done! Submit proof to complete."
+                    else
+                        "Session recorded. ${swap.remainingSessions} remaining."
+                    _uiState.value = _uiState.value.copy(successMessage = msg)
+                },
+                onFailure = { e ->
+                    _uiState.value = _uiState.value.copy(error = e.message ?: "Failed to record session")
+                }
+            )
+        }
+    }
+
+    fun submitProof(swapId: String, description: String, durationMinutes: Int) {
+        viewModelScope.launch {
+            swapRepository.submitProof(swapId, description, durationMinutes).fold(
+                onSuccess = {
+                    _uiState.value = _uiState.value.copy(
+                        successMessage = "Proof submitted. You can now complete the swap.")
+                },
+                onFailure = { e ->
+                    _uiState.value = _uiState.value.copy(error = e.message ?: "Failed to submit proof")
+                }
+            )
+        }
+    }
+
+    fun verifyQRScan(swapId: String, scannedPayload: String) {
+        viewModelScope.launch {
+            swapRepository.verifyQRScan(swapId, scannedPayload, userId).fold(
+                onSuccess = { result ->
+                    val msg = when (result) {
+                        FirebaseSwapRepository.QRVerifyResult.BOTH_VERIFIED ->
+                            "✅ Both verified! Session marked complete."
+                        FirebaseSwapRepository.QRVerifyResult.ONE_SIDE_DONE ->
+                            "Your side verified. Waiting for counterpart to scan."
+                        FirebaseSwapRepository.QRVerifyResult.WRONG_SWAP ->
+                            "QR code is for a different swap."
+                        FirebaseSwapRepository.QRVerifyResult.INVALID ->
+                            "Invalid QR code. Please try again."
+                    }
+                    _uiState.value = _uiState.value.copy(successMessage = msg)
+                },
+                onFailure = { e ->
+                    _uiState.value = _uiState.value.copy(error = e.message ?: "QR verification failed")
+                }
+            )
+        }
+    }
 
     fun completeSwap(swapId: String) {
         viewModelScope.launch {
-            swapRepository.completeSwap(swapId).fold(
-                onSuccess = { loadActiveSwaps() },
+            swapRepository.completeSwapWithRating(swapId, 5f, "").fold(
+                onSuccess = { _uiState.value = _uiState.value.copy(successMessage = "Swap completed!") },
                 onFailure = { e ->
-                    _uiState.value = _uiState.value.copy(
-                        error = e.message ?: "Failed to complete swap"
-                    )
+                    _uiState.value = _uiState.value.copy(error = e.message ?: "Failed to complete swap")
                 }
             )
         }
     }
 
-    // ── Cancel swap ───────────────────────────────────────────────────────────
+    fun rateSwap(swapId: String, rating: Int, comment: String = "") {
+        viewModelScope.launch {
+            swapRepository.completeSwapWithRating(swapId, rating.toFloat(), comment).fold(
+                onSuccess = { swap ->
+                    val msg = if (swap.tokensHeld > 0)
+                        "Rated! ${swap.tokensToMentor}T released, ${swap.tokensHeld}T held in escrow."
+                    else
+                        "Rated! ${swap.tokensToMentor}T released to mentor."
+                    _uiState.value = _uiState.value.copy(successMessage = msg)
+                },
+                onFailure = { e ->
+                    _uiState.value = _uiState.value.copy(error = e.message ?: "Failed to submit rating")
+                }
+            )
+        }
+    }
 
     fun cancelSwap(swapId: String) {
         viewModelScope.launch {
             swapRepository.cancelSwap(swapId).fold(
-                onSuccess = { loadActiveSwaps() },
+                onSuccess = {
+                    _uiState.value = _uiState.value.copy(successMessage = "Cancelled. Tokens returned.")
+                },
                 onFailure = { e ->
-                    _uiState.value = _uiState.value.copy(
-                        error = e.message ?: "Failed to cancel swap"
-                    )
-                }
-            )
-        }
-    }
-
-    // ── Rate swap ─────────────────────────────────────────────────────────────
-
-    fun rateSwap(swapId: String, rating: Int, comment: String = "") {
-        viewModelScope.launch {
-            swapRepository.rateSwap(swapId, rating, comment).fold(
-                onSuccess = { loadSwapHistory() },
-                onFailure = { e ->
-                    _uiState.value = _uiState.value.copy(
-                        error = e.message ?: "Failed to rate swap"
-                    )
+                    _uiState.value = _uiState.value.copy(error = e.message ?: "Failed to cancel")
                 }
             )
         }
     }
 
     fun clearError() {
-        _uiState.value = _uiState.value.copy(error = null)
+        _uiState.value = _uiState.value.copy(error = null, successMessage = null)
     }
 }

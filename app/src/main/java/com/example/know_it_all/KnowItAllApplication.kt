@@ -30,6 +30,10 @@ class KnowItAllApplication : Application() {
         FirebaseLedgerRepository()
     }
 
+    val chatRepository: FirebaseChatRepository by lazy {
+        FirebaseChatRepository()
+    }
+
     override fun onCreate() {
         super.onCreate()
         FirebaseApp.initializeApp(this)
