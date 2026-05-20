@@ -6,6 +6,7 @@ import com.example.know_it_all.data.repository.FirebaseLedgerRepository
 import com.example.know_it_all.data.repository.FirebaseSkillRepository
 import com.example.know_it_all.data.repository.FirebaseSwapRepository
 import com.example.know_it_all.data.repository.FirebaseUserRepository
+import com.example.know_it_all.data.repository.FirebaseChatRepository
 import com.example.know_it_all.util.SessionManager
 
 class ViewModelFactory(

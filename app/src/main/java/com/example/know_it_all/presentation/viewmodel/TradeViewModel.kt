@@ -97,11 +97,16 @@ class TradeViewModel(
     fun completeSession(swapId: String) {
         viewModelScope.launch {
             swapRepository.completeSession(swapId).fold(
-                onSuccess = { swap ->
-                    val msg = if (swap.isSessionComplete)
+                onSuccess = { swapDto ->
+                    // Safely grab the string value and convert to uppercase
+                    val statusStr = swapDto.status?.toString()?.uppercase() ?: ""
+                    val isFinished = statusStr == "COMPLETED" || statusStr == "VERIFIED"
+                    
+                    val msg = if (isFinished) {
                         "All sessions done! Submit proof to complete."
-                    else
-                        "Session recorded. ${swap.remainingSessions} remaining."
+                    } else {
+                        "Session recorded successfully within the escrow engine."
+                    }
                     _uiState.value = _uiState.value.copy(successMessage = msg)
                 },
                 onFailure = { e ->
