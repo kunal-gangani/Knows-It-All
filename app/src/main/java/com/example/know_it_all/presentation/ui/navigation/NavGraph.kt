@@ -7,27 +7,31 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.know_it_all.KnowItAllApplication
 import com.example.know_it_all.presentation.ui.screen.auth.LoginScreen
 import com.example.know_it_all.presentation.ui.screen.auth.RegisterScreen
 import com.example.know_it_all.presentation.ui.screen.auth.SplashScreen
+import com.example.know_it_all.presentation.ui.screen.main.ChatScreen
+import com.example.know_it_all.presentation.ui.screen.main.QRHandshakeScreen
 import com.example.know_it_all.presentation.ui.screen.main.RadarScreenEnhanced
 import com.example.know_it_all.presentation.ui.screen.main.SkillProfileScreenEnhanced
 import com.example.know_it_all.presentation.ui.screen.main.TradeScreenEnhanced
 import com.example.know_it_all.presentation.ui.screen.main.VaultScreenEnhanced
 import com.example.know_it_all.presentation.viewmodel.AuthViewModel
+import com.example.know_it_all.presentation.viewmodel.ChatViewModel
 import com.example.know_it_all.presentation.viewmodel.LedgerViewModel
 import com.example.know_it_all.presentation.viewmodel.RadarViewModel
 import com.example.know_it_all.presentation.viewmodel.SkillViewModel
 import com.example.know_it_all.presentation.viewmodel.TradeViewModel
 import com.example.know_it_all.presentation.viewmodel.ViewModelFactory
 
-// ---------------------------------------------------------------------------
-// Route definitions — single source of truth for all navigation strings
-// ---------------------------------------------------------------------------
+// ── Route definitions ─────────────────────────────────────────────────────────
+
 sealed class Screen(val route: String) {
     object Splash       : Screen("splash")
     object Login        : Screen("login")
@@ -36,30 +40,13 @@ sealed class Screen(val route: String) {
     object Trade        : Screen("trade")
     object Vault        : Screen("vault")
     object SkillProfile : Screen("skill_profile")
+    // ✅ New routes — chat and QR handshake
+    object Chat         : Screen("chat/{swapId}/{skillName}/{counterpartName}")
+    object QRHandshake  : Screen("qr_handshake/{swapId}/{skillName}")
 }
 
-// ---------------------------------------------------------------------------
-// Root navigation host
-// ---------------------------------------------------------------------------
+// ── Navigation host ───────────────────────────────────────────────────────────
 
-/**
- * Architecture decisions:
- *
- *  1. AuthViewModel is the ONLY ViewModel at NavHost scope — it must outlive
- *     all destinations so auth state (userId, isAuthenticated) is stable
- *     across navigation events.
- *
- *  2. All feature ViewModels are scoped to their NavBackStackEntry — created
- *     when navigating to a screen and destroyed when leaving it. This prevents
- *     all 5 ViewModels from being held in memory simultaneously.
- *
- *  3. Feature screens receive only primitives (userId, userName) from authState
- *     — never the full AuthViewModel. This breaks coupling between auth logic
- *     and feature screens and makes each screen independently testable.
- *
- *  4. onLogout is a lambda passed down from AuthViewModel — screens can trigger
- *     logout without holding a reference to AuthViewModel.
- */
 @Composable
 fun KnowItAllNavigation(
     modifier: Modifier = Modifier,
@@ -69,7 +56,6 @@ fun KnowItAllNavigation(
     val context = LocalContext.current
     val app = context.applicationContext as KnowItAllApplication
 
-    // AuthViewModel — NavHost scope (survives all navigation)
     val authViewModel: AuthViewModel = viewModel(
         factory = ViewModelFactory(
             userRepository = app.userRepository,
@@ -84,7 +70,7 @@ fun KnowItAllNavigation(
         modifier = modifier
     ) {
 
-        // ── Splash ──────────────────────────────────────────────────────────
+        // ── Splash ────────────────────────────────────────────────────────────
         composable(Screen.Splash.route) {
             SplashScreen(
                 navController = navController,
@@ -92,7 +78,7 @@ fun KnowItAllNavigation(
             )
         }
 
-        // ── Login ────────────────────────────────────────────────────────────
+        // ── Login ─────────────────────────────────────────────────────────────
         composable(Screen.Login.route) {
             LoginScreen(
                 navController = navController,
@@ -100,7 +86,7 @@ fun KnowItAllNavigation(
             )
         }
 
-        // ── Register ─────────────────────────────────────────────────────────
+        // ── Register ──────────────────────────────────────────────────────────
         composable(Screen.Register.route) {
             RegisterScreen(
                 navController = navController,
@@ -108,7 +94,7 @@ fun KnowItAllNavigation(
             )
         }
 
-        // ── Radar ────────────────────────────────────────────────────────────
+        // ── Radar ─────────────────────────────────────────────────────────────
         composable(Screen.Radar.route) { backStackEntry ->
             val radarViewModel: RadarViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
@@ -130,7 +116,7 @@ fun KnowItAllNavigation(
             )
         }
 
-        // ── Trade ────────────────────────────────────────────────────────────
+        // ── Trade ─────────────────────────────────────────────────────────────
         composable(Screen.Trade.route) { backStackEntry ->
             val tradeViewModel: TradeViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
@@ -152,7 +138,7 @@ fun KnowItAllNavigation(
             )
         }
 
-        // ── Vault ────────────────────────────────────────────────────────────
+        // ── Vault ─────────────────────────────────────────────────────────────
         composable(Screen.Vault.route) { backStackEntry ->
             val ledgerViewModel: LedgerViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
@@ -177,7 +163,7 @@ fun KnowItAllNavigation(
             )
         }
 
-        // ── Skill Profile ─────────────────────────────────────────────────────
+        // ── Skill Profile ──────────────────────────────────────────────────────
         composable(Screen.SkillProfile.route) { backStackEntry ->
             val skillViewModel: SkillViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
@@ -197,6 +183,65 @@ fun KnowItAllNavigation(
                         popUpTo(0) { inclusive = true }
                     }
                 }
+            )
+        }
+
+        // ── Chat ──────────────────────────────────────────────────────────────
+        // Route: chat/{swapId}/{skillName}/{counterpartName}
+        composable(
+            route = Screen.Chat.route,
+            arguments = listOf(
+                navArgument("swapId")          { type = NavType.StringType },
+                navArgument("skillName")       { type = NavType.StringType },
+                navArgument("counterpartName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val swapId          = backStackEntry.arguments?.getString("swapId") ?: ""
+            val skillName       = backStackEntry.arguments?.getString("skillName") ?: ""
+            val counterpartName = backStackEntry.arguments?.getString("counterpartName") ?: ""
+
+            val chatViewModel: ChatViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = ViewModelFactory(
+                    chatRepository = app.chatRepository
+                )
+            )
+            ChatScreen(
+                navController    = navController,
+                chatViewModel    = chatViewModel,
+                swapId           = swapId,
+                swapSkillName    = skillName,
+                counterpartName  = counterpartName,
+                currentUserId    = authState.userId ?: ""
+            )
+        }
+
+        // ── QR Handshake ──────────────────────────────────────────────────────
+        // Route: qr_handshake/{swapId}/{skillName}
+        composable(
+            route = Screen.QRHandshake.route,
+            arguments = listOf(
+                navArgument("swapId")    { type = NavType.StringType },
+                navArgument("skillName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val swapId    = backStackEntry.arguments?.getString("swapId") ?: ""
+            val skillName = backStackEntry.arguments?.getString("skillName") ?: ""
+
+            // QRHandshakeScreen needs its own TradeViewModel instance
+            val tradeViewModel: TradeViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = ViewModelFactory(
+                    swapRepository = app.swapRepository,
+                    sessionManager = app.sessionManager
+                )
+            )
+            QRHandshakeScreen(
+                navController   = navController,
+                tradeViewModel  = tradeViewModel,
+                swapId          = swapId,
+                currentUserId   = authState.userId ?: "",
+                skillName       = skillName
             )
         }
     }
