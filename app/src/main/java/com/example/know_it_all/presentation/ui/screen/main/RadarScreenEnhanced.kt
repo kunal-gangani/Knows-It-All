@@ -112,7 +112,6 @@ fun RadarScreenEnhanced(
 
     var showMap by remember { mutableStateOf(true) }
 
-    // Sheet states
     var selectedUser by remember { mutableStateOf<User?>(null) }
     var showRequestSheet by remember { mutableStateOf(false) }
     var requestTargetUser by remember { mutableStateOf<User?>(null) }
@@ -194,7 +193,7 @@ fun RadarScreenEnhanced(
                     IconButton(onClick = { showMap = !showMap }) {
                         Icon(
                             imageVector = if (showMap) Icons.AutoMirrored.Filled.List
-                                          else Icons.Default.Map,
+                                        else Icons.Default.Map,
                             contentDescription = null,
                             tint = NearBlack,
                             modifier = Modifier.size(20.dp)
@@ -265,7 +264,6 @@ fun RadarScreenEnhanced(
         }
     }
 
-    // ── Mentor profile sheet ──────────────────────────────────────────────────
     selectedUser?.let { user ->
         ModalBottomSheet(
             onDismissRequest = { selectedUser = null },
@@ -278,7 +276,6 @@ fun RadarScreenEnhanced(
                 currentLon = radarState.currentLon,
                 onDismiss = { selectedUser = null },
                 onConnect = {
-                    // ✅ Connect button → open request swap sheet
                     requestTargetUser = user
                     selectedUser = null
                     showRequestSheet = true
@@ -287,7 +284,6 @@ fun RadarScreenEnhanced(
         }
     }
 
-    // ── Request swap sheet ────────────────────────────────────────────────────
     if (showRequestSheet && requestTargetUser != null) {
         ModalBottomSheet(
             onDismissRequest = { showRequestSheet = false },
@@ -300,7 +296,6 @@ fun RadarScreenEnhanced(
                 onDismiss = { showRequestSheet = false },
                 onRequestSent = {
                     showRequestSheet = false
-                    // Navigate to Trade screen to see the new request
                     navController.navigate("trade") {
                         launchSingleTop = true
                     }
@@ -309,10 +304,6 @@ fun RadarScreenEnhanced(
         }
     }
 }
-
-// =============================================================================
-// Request Swap Sheet — the full swap request flow
-// =============================================================================
 
 @Composable
 private fun RequestSwapSheet(
@@ -324,7 +315,6 @@ private fun RequestSwapSheet(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    // Repositories — used directly here since this is a one-shot action
     val skillRepository = remember { FirebaseSkillRepository() }
     val swapRepository  = remember { FirebaseSwapRepository() }
 
@@ -338,8 +328,13 @@ private fun RequestSwapSheet(
     var isSending    by remember { mutableStateOf(false) }
     var error        by remember { mutableStateOf<String?>(null) }
     var success      by remember { mutableStateOf(false) }
+    var totalSessions    by remember { mutableIntStateOf(1) }
+    var durationMinutes  by remember { mutableIntStateOf(60) }
+    var showSessionSetup by remember { mutableStateOf(false) }
+    var totalSessions    by remember { mutableIntStateOf(1) }
+    var durationMinutes  by remember { mutableIntStateOf(60) }
+    var showSessionSetup by remember { mutableStateOf(false) }
 
-    // Load both skill lists on open
     LaunchedEffect(Unit) {
         isLoading = true
         skillRepository.getUserSkills(mentor.uid).onSuccess { mentorSkills = it }
@@ -354,7 +349,6 @@ private fun RequestSwapSheet(
             .padding(bottom = 40.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Header
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -394,7 +388,6 @@ private fun RequestSwapSheet(
                     modifier = Modifier.size(24.dp))
             }
         } else if (success) {
-            // ── Success state ─────────────────────────────────────────────────
             Column(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -424,7 +417,6 @@ private fun RequestSwapSheet(
                 }
             }
         } else {
-            // ── Swap type selector ────────────────────────────────────────────
             Column {
                 SectionLabel("Swap Type")
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -450,7 +442,6 @@ private fun RequestSwapSheet(
                 }
             }
 
-            // ── Mentor's skills (what you want to learn) ──────────────────────
             Column {
                 SectionLabel("Skill you want to learn")
                 if (mentorSkills.isEmpty()) {
@@ -477,7 +468,6 @@ private fun RequestSwapSheet(
                 }
             }
 
-            // ── Your skills (BARTER only) ─────────────────────────────────────
             if (selectedSwapType == SwapType.BARTER || selectedSwapType == SwapType.HYBRID) {
                 Column {
                     SectionLabel("Skill you offer in return")
@@ -507,7 +497,6 @@ private fun RequestSwapSheet(
                 }
             }
 
-            // ── Token amount (TOKEN or HYBRID) ────────────────────────────────
             if (selectedSwapType == SwapType.TOKEN || selectedSwapType == SwapType.HYBRID) {
                 Column {
                     SectionLabel("Token amount to offer")
@@ -535,10 +524,24 @@ private fun RequestSwapSheet(
                             }
                         }
                     }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            "$totalSessions session(s) × ${durationMinutes}min",
+                            fontSize = 13.sp, color = CharcoalGray
+                        )
+                        androidx.compose.material3.TextButton(
+                            onClick = { showSessionSetup = true }
+                        ) {
+                            Text("Change", color = AcidGreen, fontSize = 13.sp)
+                        }
+                    }
                 }
             }
 
-            // ── Error ─────────────────────────────────────────────────────────
             error?.let {
                 Box(
                     modifier = Modifier
@@ -550,16 +553,14 @@ private fun RequestSwapSheet(
                 }
             }
 
-            // ── Send button ───────────────────────────────────────────────────
             Button(
                 onClick = {
-                    // Validate
                     if (selectedMentorSkill == null) {
                         error = "Please select a skill to learn"
                         return@Button
                     }
                     if ((selectedSwapType == SwapType.BARTER ||
-                         selectedSwapType == SwapType.HYBRID) &&
+                        selectedSwapType == SwapType.HYBRID) &&
                         selectedMySkill == null) {
                         error = "Please select a skill to offer"
                         return@Button
@@ -570,14 +571,16 @@ private fun RequestSwapSheet(
 
                     scope.launch {
                         val request = SwapRequestBody(
-                            mentorId      = mentor.uid,
-                            learnerId     = currentUserId,
-                            mentorSkillId = selectedMentorSkill!!.skillId,
-                            learnerSkillId = selectedMySkill?.skillId,
-                            swapType      = selectedSwapType,
-                            tokenAmount   = if (selectedSwapType == SwapType.TOKEN ||
-                                               selectedSwapType == SwapType.HYBRID)
-                                            tokenAmount else 0L
+                            mentorId        = mentor.uid,
+                            learnerId       = currentUserId,
+                            mentorSkillId   = selectedMentorSkill!!.skillId,
+                            learnerSkillId  = selectedMySkill?.skillId,
+                            swapType        = selectedSwapType,
+                            tokenAmount     = if (selectedSwapType == SwapType.TOKEN ||
+                                            selectedSwapType == SwapType.HYBRID)
+                                            tokenAmount else 0L,
+                            totalSessions   = totalSessions,
+                            durationMinutes = durationMinutes
                         )
 
                         swapRepository.requestSwap(request).fold(
@@ -619,6 +622,23 @@ private fun RequestSwapSheet(
             ) {
                 Text("Cancel", color = CharcoalGray)
             }
+        }
+    }
+
+    if (showSessionSetup) {
+        androidx.compose.material3.ModalBottomSheet(
+            onDismissRequest = { showSessionSetup = false },
+            containerColor = Cream
+        ) {
+            SessionSetupSheet(
+                swapTypeName = selectedSwapType.name,
+                onConfirm = { sessions, duration ->
+                    totalSessions   = sessions
+                    durationMinutes = duration
+                    showSessionSetup = false
+                },
+                onDismiss = { showSessionSetup = false }
+            )
         }
     }
 }
@@ -675,10 +695,6 @@ private fun SectionLabel(text: String) {
         modifier = Modifier.padding(bottom = 6.dp)
     )
 }
-
-// =============================================================================
-// OSMDroid Map
-// =============================================================================
 
 @Composable
 private fun OSMMapView(
@@ -756,9 +772,9 @@ private fun createInitialsMarker(
     val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
     val bgColor = if (isMe) android.graphics.Color.parseColor("#AAFF00")
-                  else android.graphics.Color.parseColor("#1A1A1A")
+                else android.graphics.Color.parseColor("#1A1A1A")
     val textColor = if (isMe) android.graphics.Color.parseColor("#1A1A1A")
-                   else android.graphics.Color.parseColor("#F5F0E8")
+                else android.graphics.Color.parseColor("#F5F0E8")
     canvas.drawCircle(size / 2f, size / 2f, size / 2f - 2f,
         Paint(Paint.ANTI_ALIAS_FLAG).apply { color = bgColor })
     canvas.drawCircle(size / 2f, size / 2f, size / 2f - 2f,
@@ -796,7 +812,7 @@ private fun MentorProfileSheet(
     currentLat: Double,
     currentLon: Double,
     onDismiss: () -> Unit,
-    onConnect: () -> Unit           // ✅ now triggers swap request flow
+    onConnect: () -> Unit           // now triggers swap request flow
 ) {
     val distance = calculateDistanceKm(currentLat, currentLon, user.latitude, user.longitude)
     Column(
@@ -848,7 +864,7 @@ private fun MentorProfileSheet(
             }
         }
 
-        // ✅ Connect now opens the Request Swap sheet
+        // Connect now opens the Request Swap sheet
         Button(
             onClick = onConnect,
             modifier = Modifier.fillMaxWidth().height(52.dp),

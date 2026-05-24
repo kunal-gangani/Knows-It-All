@@ -2,6 +2,7 @@ package com.example.know_it_all.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.know_it_all.presentation.viewmodel.ChatViewModel
 import com.example.know_it_all.data.repository.FirebaseLedgerRepository
 import com.example.know_it_all.data.repository.FirebaseSkillRepository
 import com.example.know_it_all.data.repository.FirebaseSwapRepository
