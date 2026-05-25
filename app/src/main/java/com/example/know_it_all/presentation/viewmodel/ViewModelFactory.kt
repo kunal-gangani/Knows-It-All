@@ -17,6 +17,7 @@ class ViewModelFactory(
     private val ledgerRepository: FirebaseLedgerRepository? = null,
     private val sessionManager: SessionManager? = null,
     private val chatRepository: FirebaseChatRepository? = null
+    private val feedRepository: FeedRepository? = null
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -34,6 +35,12 @@ class ViewModelFactory(
                     sessionManager = requireNotNull(sessionManager)
                 ) as T
             }
+            modelClass.isAssignableFrom(FeedViewModel::class.java) -> {
+                FeedViewModel(
+                    feedRepository = requireNotNull(feedRepository),
+                    sessionManager = requireNotNull(sessionManager)
+                ) as T
+        }
             modelClass.isAssignableFrom(TradeViewModel::class.java) -> {
                 TradeViewModel(
                     swapRepository = requireNotNull(swapRepository),

@@ -91,7 +91,7 @@ fun SplashScreen(
         textVisible = true
         delay(1800)
         if (isLoggedIn) {
-            navController.navigate(Screen.Radar.route) {
+            navController.navigate(Screen.Feed.route) {
                 popUpTo(Screen.Splash.route) { inclusive = true }
             }
         } else {

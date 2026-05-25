@@ -17,6 +17,7 @@ import com.example.know_it_all.presentation.ui.screen.auth.LoginScreen
 import com.example.know_it_all.presentation.ui.screen.auth.RegisterScreen
 import com.example.know_it_all.presentation.ui.screen.auth.SplashScreen
 import com.example.know_it_all.presentation.ui.screen.main.ChatScreen
+import com.example.know_it_all.presentation.ui.screen.main.FeedScreen
 import com.example.know_it_all.presentation.ui.screen.main.QRHandshakeScreen
 import com.example.know_it_all.presentation.ui.screen.main.RadarScreenEnhanced
 import com.example.know_it_all.presentation.ui.screen.main.SkillProfileScreenEnhanced
@@ -24,28 +25,25 @@ import com.example.know_it_all.presentation.ui.screen.main.TradeScreenEnhanced
 import com.example.know_it_all.presentation.ui.screen.main.VaultScreenEnhanced
 import com.example.know_it_all.presentation.viewmodel.AuthViewModel
 import com.example.know_it_all.presentation.viewmodel.ChatViewModel
+import com.example.know_it_all.presentation.viewmodel.FeedViewModel
 import com.example.know_it_all.presentation.viewmodel.LedgerViewModel
 import com.example.know_it_all.presentation.viewmodel.RadarViewModel
 import com.example.know_it_all.presentation.viewmodel.SkillViewModel
 import com.example.know_it_all.presentation.viewmodel.TradeViewModel
 import com.example.know_it_all.presentation.viewmodel.ViewModelFactory
 
-// ── Route definitions ─────────────────────────────────────────────────────────
-
 sealed class Screen(val route: String) {
     object Splash       : Screen("splash")
     object Login        : Screen("login")
     object Register     : Screen("register")
+    object Feed         : Screen("feed")
     object Radar        : Screen("radar")
     object Trade        : Screen("trade")
     object Vault        : Screen("vault")
     object SkillProfile : Screen("skill_profile")
-    // ✅ New routes — chat and QR handshake
     object Chat         : Screen("chat/{swapId}/{skillName}/{counterpartName}")
     object QRHandshake  : Screen("qr_handshake/{swapId}/{skillName}")
 }
-
-// ── Navigation host ───────────────────────────────────────────────────────────
 
 @Composable
 fun KnowItAllNavigation(
@@ -70,7 +68,6 @@ fun KnowItAllNavigation(
         modifier = modifier
     ) {
 
-        // ── Splash ────────────────────────────────────────────────────────────
         composable(Screen.Splash.route) {
             SplashScreen(
                 navController = navController,
@@ -78,7 +75,6 @@ fun KnowItAllNavigation(
             )
         }
 
-        // ── Login ─────────────────────────────────────────────────────────────
         composable(Screen.Login.route) {
             LoginScreen(
                 navController = navController,
@@ -86,11 +82,28 @@ fun KnowItAllNavigation(
             )
         }
 
-        // ── Register ──────────────────────────────────────────────────────────
         composable(Screen.Register.route) {
             RegisterScreen(
                 navController = navController,
                 authViewModel = authViewModel
+            )
+        }
+
+        // ── Feed ──────────────────────────────────────────────────────────────
+        composable(Screen.Feed.route) { backStackEntry ->
+            val feedViewModel: FeedViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = ViewModelFactory(
+                    feedRepository = app.feedRepository,
+                    sessionManager = app.sessionManager
+                )
+            )
+            FeedScreen(
+                navController = navController,
+                feedViewModel = feedViewModel,
+                onMentorConnect = {
+                    navController.navigate(Screen.Radar.route)
+                }
             )
         }
 
@@ -144,15 +157,15 @@ fun KnowItAllNavigation(
                 viewModelStoreOwner = backStackEntry,
                 factory = ViewModelFactory(
                     ledgerRepository = app.ledgerRepository,
-                    skillRepository = app.skillRepository,
-                    userRepository = app.userRepository,
-                    sessionManager = app.sessionManager
+                    skillRepository  = app.skillRepository,
+                    userRepository   = app.userRepository,
+                    sessionManager   = app.sessionManager
                 )
             )
             VaultScreenEnhanced(
                 navController = navController,
                 ledgerViewModel = ledgerViewModel,
-                userId = authState.userId ?: "",
+                userId   = authState.userId ?: "",
                 userName = authState.userName ?: "",
                 onLogout = {
                     authViewModel.logout()
@@ -163,19 +176,19 @@ fun KnowItAllNavigation(
             )
         }
 
-        // ── Skill Profile ──────────────────────────────────────────────────────
+        // ── Skill Profile ─────────────────────────────────────────────────────
         composable(Screen.SkillProfile.route) { backStackEntry ->
             val skillViewModel: SkillViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = ViewModelFactory(
                     skillRepository = app.skillRepository,
-                    sessionManager = app.sessionManager
+                    sessionManager  = app.sessionManager
                 )
             )
             SkillProfileScreenEnhanced(
                 navController = navController,
                 skillViewModel = skillViewModel,
-                userId = authState.userId ?: "",
+                userId   = authState.userId ?: "",
                 userName = authState.userName ?: "",
                 onLogout = {
                     authViewModel.logout()
@@ -187,7 +200,6 @@ fun KnowItAllNavigation(
         }
 
         // ── Chat ──────────────────────────────────────────────────────────────
-        // Route: chat/{swapId}/{skillName}/{counterpartName}
         composable(
             route = Screen.Chat.route,
             arguments = listOf(
@@ -196,28 +208,21 @@ fun KnowItAllNavigation(
                 navArgument("counterpartName") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val swapId          = backStackEntry.arguments?.getString("swapId") ?: ""
-            val skillName       = backStackEntry.arguments?.getString("skillName") ?: ""
-            val counterpartName = backStackEntry.arguments?.getString("counterpartName") ?: ""
-
             val chatViewModel: ChatViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
-                factory = ViewModelFactory(
-                    chatRepository = app.chatRepository
-                )
+                factory = ViewModelFactory(chatRepository = app.chatRepository)
             )
             ChatScreen(
-                navController    = navController,
-                chatViewModel    = chatViewModel,
-                swapId           = swapId,
-                swapSkillName    = skillName,
-                counterpartName  = counterpartName,
-                currentUserId    = authState.userId ?: ""
+                navController   = navController,
+                chatViewModel   = chatViewModel,
+                swapId          = backStackEntry.arguments?.getString("swapId") ?: "",
+                swapSkillName   = backStackEntry.arguments?.getString("skillName") ?: "",
+                counterpartName = backStackEntry.arguments?.getString("counterpartName") ?: "",
+                currentUserId   = authState.userId ?: ""
             )
         }
 
         // ── QR Handshake ──────────────────────────────────────────────────────
-        // Route: qr_handshake/{swapId}/{skillName}
         composable(
             route = Screen.QRHandshake.route,
             arguments = listOf(
@@ -225,10 +230,6 @@ fun KnowItAllNavigation(
                 navArgument("skillName") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val swapId    = backStackEntry.arguments?.getString("swapId") ?: ""
-            val skillName = backStackEntry.arguments?.getString("skillName") ?: ""
-
-            // QRHandshakeScreen needs its own TradeViewModel instance
             val tradeViewModel: TradeViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = ViewModelFactory(
@@ -237,11 +238,11 @@ fun KnowItAllNavigation(
                 )
             )
             QRHandshakeScreen(
-                navController   = navController,
-                tradeViewModel  = tradeViewModel,
-                swapId          = swapId,
-                currentUserId   = authState.userId ?: "",
-                skillName       = skillName
+                navController  = navController,
+                tradeViewModel = tradeViewModel,
+                swapId         = backStackEntry.arguments?.getString("swapId") ?: "",
+                currentUserId  = authState.userId ?: "",
+                skillName      = backStackEntry.arguments?.getString("skillName") ?: ""
             )
         }
     }
