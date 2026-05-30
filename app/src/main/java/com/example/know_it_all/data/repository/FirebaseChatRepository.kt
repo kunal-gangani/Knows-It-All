@@ -1,5 +1,7 @@
 package com.example.know_it_all.data.repository
 
+import com.example.know_it_all.util.NotificationHelper
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -71,6 +73,27 @@ class FirebaseChatRepository {
                 "timestamp" to System.currentTimeMillis()
             )
             messagesRef(swapId).document(messageId).set(message).await()
+
+            // Notify counterpart of new message
+            try {
+                val swapDoc    = db.collection("swaps").document(swapId).get().await()
+                val mentorId   = swapDoc.getString("mentorId") ?: ""
+                val learnerId  = swapDoc.getString("learnerId") ?: ""
+                val skillName  = swapDoc.getString("skillName") ?: ""
+                val toUserId   = if (senderId == mentorId) learnerId else mentorId
+                val senderDoc  = db.collection("users").document(senderId).get().await()
+                val senderName = senderDoc.getString("name") ?: "Someone"
+                NotificationHelper.notifyNewMessage(
+                    toUserId     = toUserId,
+                    fromUserName = senderName,
+                    message      = text,
+                    swapId       = swapId,
+                    skillName    = skillName
+                )
+            } catch (e: Exception) {
+                // Notification failure should not fail the message send
+            }
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

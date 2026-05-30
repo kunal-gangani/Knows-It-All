@@ -6,6 +6,7 @@ import com.example.know_it_all.data.model.SwapType
 import com.example.know_it_all.data.model.VerificationMethod
 import com.example.know_it_all.data.model.dto.SwapDTO
 import com.example.know_it_all.data.model.dto.SwapRequestBody
+import com.example.know_it_all.util.NotificationHelper
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -130,6 +131,14 @@ class FirebaseSwapRepository {
                 "tokensHeld"          to 0L
             )).await()
 
+            // Notify mentor of new swap request
+            NotificationHelper.notifySwapRequest(
+                toUserId     = request.mentorId,
+                fromUserName = learnerName,
+                skillName    = skillName,
+                swapId       = swapId
+            )
+
             Result.success(SwapDTO(
                 swapId = swapId,
                 mentorId = request.mentorId, learnerId = request.learnerId,
@@ -189,6 +198,16 @@ class FirebaseSwapRepository {
                     "updatedAt"      to System.currentTimeMillis()
                 ))
             }.await()
+
+            // Notify learner that swap was accepted
+            val mentorName = swapDoc.getString("mentorName") ?: ""
+            val skillName  = swapDoc.getString("skillName") ?: ""
+            NotificationHelper.notifySwapAccepted(
+                toUserId   = learnerId,
+                mentorName = mentorName,
+                skillName  = skillName,
+                swapId     = swapId
+            )
 
             getSwapById(swapId)
         } catch (e: Exception) { Result.failure(e) }
@@ -376,6 +395,20 @@ class FirebaseSwapRepository {
                     "updatedAt"      to System.currentTimeMillis()
                 ))
             }.await()
+
+            // Notify both users of cancellation
+            val cancelDoc    = swapsCollection.document(swapId).get().await()
+            val mentorId     = cancelDoc.getString("mentorId") ?: ""
+            val cancelSkill  = cancelDoc.getString("skillName") ?: ""
+            val currentUid   = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: ""
+            val currentName  = usersCollection.document(currentUid).get().await().getString("name") ?: ""
+            val notifyUserId = if (currentUid == mentorId) learnerId else mentorId
+            NotificationHelper.notifySwapCancelled(
+                toUserId   = notifyUserId,
+                byUserName = currentName,
+                skillName  = cancelSkill
+            )
+
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }
     }
