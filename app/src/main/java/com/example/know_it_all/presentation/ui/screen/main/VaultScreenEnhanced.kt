@@ -10,7 +10,7 @@ import com.example.know_it_all.ui.theme.WarmGray
 import com.example.know_it_all.ui.theme.Ochre
 import com.example.know_it_all.ui.theme.ErrorRed
 import com.example.know_it_all.ui.theme.ErrorContainerColor
-import androidx.compose.runtime.remember
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
@@ -34,6 +34,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -84,7 +86,11 @@ fun VaultScreenEnhanced(
 ) {
     val context = LocalContext.current
     val ledgerState by ledgerViewModel.uiState.collectAsState()
-    val passportEvent by ledgerViewModel.passportEvent.collectAsState(initial = null)
+    val passportEvent by ledgerViewModel.passportEvent.collectAsState()
+
+    LaunchedEffect(Unit) {
+        ledgerViewModel.loadLedger(userId)  // ✅ no token param
+    }
 
     // Handle passport file event — launch share intent when ready
     LaunchedEffect(passportEvent) {
@@ -105,6 +111,7 @@ fun VaultScreenEnhanced(
                 // No PDF viewer installed — fall through, passport file is still saved
                 e.printStackTrace()
             }
+            ledgerViewModel.consumePassportEvent()
         }
     }
 
@@ -157,44 +164,84 @@ fun VaultScreenEnhanced(
                 TokenBalanceCard(
                     balance = ledgerState.tokenBalance,
                     trustScore = ledgerState.trustScore,
-                    completedSwaps = ledgerState.totalSwaps,
-                    averageRating = ledgerState.trustScore
+                    completedSwaps = ledgerState.completedSwapCount,
+                    averageRating = ledgerState.averageRating
                 )
             }
 
-            // Skill Passport button
+            // Skill Passport — generate + share buttons
             item {
-                Button(
-                    onClick = {
-                        // userName and userEmail should be passed in or read from SessionManager
-                        ledgerViewModel.generateSkillPassport(context)
-                    },
-                    enabled = !ledgerState.isLoading,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = NearBlack,
-                        contentColor = AcidGreen,
-                        disabledContainerColor = CreamDark,
-                        disabledContentColor = WarmGray
-                    )
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    if (ledgerState.isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            color = AcidGreen,
-                            strokeWidth = 2.dp
+                    // Generate / Download PDF
+                    Button(
+                        onClick = { ledgerViewModel.generateSkillPassport(context) },
+                        enabled = !ledgerState.isLoading,
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = NearBlack,
+                            contentColor = AcidGreen,
+                            disabledContainerColor = CreamDark,
+                            disabledContentColor = WarmGray
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Generating...", fontWeight = FontWeight.Bold)
-                    } else {
-                        Icon(Icons.Default.Download, contentDescription = null,
-                            modifier = Modifier.size(17.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Generate Skill Passport", fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp)
+                    ) {
+                        if (ledgerState.isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                color = AcidGreen,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Generating...", fontWeight = FontWeight.Bold)
+                        } else {
+                            Icon(Icons.Default.Download, contentDescription = null,
+                                modifier = Modifier.size(17.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Generate Skill Passport", fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp)
+                        }
+                    }
+
+                    // Share buttons row
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        // Share PDF
+                        Button(
+                            onClick = { ledgerViewModel.sharePDF(context) },
+                            enabled = !ledgerState.isLoading,
+                            modifier = Modifier.weight(1f).height(48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = CreamDark,
+                                contentColor = NearBlack
+                            )
+                        ) {
+                            Icon(Icons.Default.Share, contentDescription = null,
+                                modifier = Modifier.size(15.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Share PDF", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        }
+
+                        // Share web link
+                        Button(
+                            onClick = { ledgerViewModel.shareWebLink(context) },
+                            enabled = !ledgerState.isLoading,
+                            modifier = Modifier.weight(1f).height(48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = AcidGreen,
+                                contentColor = NearBlack
+                            )
+                        ) {
+                            Icon(Icons.Default.Link, contentDescription = null,
+                                modifier = Modifier.size(15.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Share Link", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        }
                     }
                 }
             }

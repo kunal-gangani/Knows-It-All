@@ -24,6 +24,9 @@
     getExternalFilesDir first and falls back to cacheDir.
 -->
 <paths>
+
+    <files-path name="passports" path="passports/"/>
+    <cache-path name="cache" path="."/>
     <!-- External app-specific storage — primary PDF output location -->
     <external-files-path
         name="passports"

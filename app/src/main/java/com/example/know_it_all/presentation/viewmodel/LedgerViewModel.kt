@@ -1,6 +1,7 @@
 package com.example.know_it_all.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.example.know_it_all.util.SkillPassportShareHelper
 import androidx.lifecycle.viewModelScope
 import com.example.know_it_all.data.model.TrustLedger
 import com.example.know_it_all.data.repository.FirebaseLedgerRepository
@@ -158,6 +159,92 @@ class LedgerViewModel(
                         error = e.message ?: "Failed to generate passport"
                     )
                     _passportEvent.emit(null)
+                }
+            )
+        }
+    }
+
+
+    // ── Share PDF ─────────────────────────────────────────────────────────────
+
+    fun sharePDF(context: android.content.Context) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            val userName  = sessionManager.getUserName() ?: "User"
+            val userEmail = sessionManager.getUserEmail() ?: ""
+
+            skillRepository.getUserSkills(userId).fold(
+                onSuccess = { skills ->
+                    val file = SkillPassportGenerator.generatePDF(
+                        context    = context,
+                        userName   = userName,
+                        email      = userEmail,
+                        foundedDate = "2026",
+                        skills     = skills.map { skill ->
+                            SkillPassportGenerator.SkillInfo(
+                                name        = skill.skillName,
+                                category    = skill.category.name,
+                                proficiency = skill.proficiencyLevel.name,
+                                year        = java.util.Calendar.getInstance()
+                                    .get(java.util.Calendar.YEAR)
+                            )
+                        },
+                        trustScore = _uiState.value.trustScore
+                    )
+                    _uiState.value = _uiState.value.copy(isLoading = false)
+                    if (file != null) {
+                        SkillPassportShareHelper.sharePDF(context, file)
+                    } else {
+                        _uiState.value = _uiState.value.copy(
+                            error = "Failed to generate PDF"
+                        )
+                    }
+                },
+                onFailure = { e ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = e.message ?: "Failed to generate passport"
+                    )
+                }
+            )
+        }
+    }
+
+    // ── Generate and share web link ───────────────────────────────────────────
+
+    fun shareWebLink(context: android.content.Context) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            val userName  = sessionManager.getUserName() ?: "User"
+            val userEmail = sessionManager.getUserEmail() ?: ""
+
+            skillRepository.getUserSkills(userId).fold(
+                onSuccess = { skills ->
+                    SkillPassportShareHelper.generateWebLink(
+                        userId        = userId,
+                        userName      = userName,
+                        userEmail     = userEmail,
+                        trustScore    = _uiState.value.trustScore,
+                        completedSwaps = _uiState.value.totalSwaps,
+                        skills        = skills
+                    ).fold(
+                        onSuccess = { url ->
+                            _uiState.value = _uiState.value.copy(isLoading = false)
+                            SkillPassportShareHelper.shareWebLink(context, url, userName)
+                        },
+                        onFailure = { e ->
+                            _uiState.value = _uiState.value.copy(
+                                isLoading = false,
+                                error = e.message ?: "Failed to generate link"
+                            )
+                        }
+                    )
+                },
+                onFailure = { e ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = e.message ?: "Failed to load skills"
+                    )
                 }
             )
         }
