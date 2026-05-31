@@ -39,6 +39,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -99,6 +100,7 @@ fun SkillProfileScreenEnhanced(
 ) {
     val skillState by skillViewModel.uiState.collectAsState()
     var showAddSkillSheet by remember { mutableStateOf(false) }
+    var showAvailabilitySheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     LaunchedEffect(userId) {
@@ -252,6 +254,24 @@ fun SkillProfileScreenEnhanced(
                 }
             }
 
+            // Availability button
+            item {
+                Button(
+                    onClick = { showAvailabilitySheet = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(CreamDark, NearBlack),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Schedule,
+                        null,
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text("Set Availability", fontSize = 13.sp)
+                }
+            }
+
             // Loading
             if (skillState.isLoading && skillState.skills.isEmpty()) {
                 item {
@@ -309,6 +329,18 @@ fun SkillProfileScreenEnhanced(
                     showAddSkillSheet = false
                 },
                 onDismiss = { showAddSkillSheet = false }
+            )
+        }
+    }
+
+    // Availability editor sheet
+    if (showAvailabilitySheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showAvailabilitySheet = false },
+            containerColor = Cream
+        ) {
+            AvailabilityEditorSheet(
+                onDismiss = { showAvailabilitySheet = false }
             )
         }
     }

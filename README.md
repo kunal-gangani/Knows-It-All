@@ -13,10 +13,13 @@ KnowItAll is a revolutionary peer-to-peer (P2P) platform designed to empower ind
 4. [🔒 Trust & Security (The Ledger)](#-trust--security-the-ledger)
 5. [📜 The Skill Passport](#-the-skill-passport)
 6. [📱 App Walkthrough](#-app-walkthrough)
-7. [🏗 System Architecture (UML)](#-system-architecture-uml)
-8. [🛠 Tech Stack](#-tech-stack)
-9. [🚀 Getting Started](#-getting-started)
-10. [❓ FAQ](#-faq)
+7. [🗓 Availability Calendar](#-availability-calendar)
+8. [🔔 Push Notifications](#-push-notifications)
+9. [📡 Skill Feed & Discovery](#-skill-feed--discovery)
+10. [🏗 System Architecture](#-system-architecture)
+11. [🛠 Tech Stack](#-tech-stack)
+12. [🚀 Getting Started](#-getting-started)
+13. [❓ FAQ](#-faq)
 
 ---
 
@@ -31,142 +34,267 @@ In many communities, valuable skills go untapped because there is no formal mark
 
 ## 🛤 How It Works (User Journey)
 
-### 1. **Discover (Skill Radar)**
-Open the **Skill Radar** to see a real-time map of mentors and learners within 5km. Filter by skill categories like *Digital*, *Physical*, or *Hybrid*.
+### 1. **Discover (Skill Feed + Skill Radar)**
+Open the **Skill Feed** to see new skills added nearby, recently completed swaps, top-rated mentors, and trending categories. Switch to the **Skill Radar** for a real-time OSMDroid map of mentors within 5km. Filter by online status or skill categories.
 
 ### 2. **Connect & Request**
-Found someone who teaches what you need? Send a **Swap Request**. You can propose a:
+Found someone who teaches what you need? Tap their map pin → view their profile → tap **Connect & Request Swap**. Choose:
 - **Barter Trade**: "I'll teach you Python if you teach me Guitar."
 - **Token Trade**: "I'll pay you 50 SkillTokens for a 1-hour Java lesson."
+- **Hybrid Trade**: Both tokens and skill exchange.
 
-### 3. **The Handshake (Verification)**
-Once the session happens, verify it:
-- **In-Person**: Scan each other's **QR Handshake** code.
-- **Remote**: Use the built-in **Video Call** interface.
+For TOKEN and HYBRID swaps, select the number of sessions and duration. Pick a time slot from the mentor's **Availability Calendar** if they've set one.
 
-### 4. **Finalize & Review**
-After the session, the **Trust Ledger** records the transaction. Both parties rate each other, contributing to their global **Trust Score**.
+### 3. **The Session**
+Once accepted:
+- **Online (TOKEN/HYBRID)**: Use the built-in **Chat** to coordinate, then launch a **Jitsi Meet video call** with one tap. After each session, mark it complete and track progress.
+- **In-Person (BARTER)**: Meet up, then both open the **QR Handshake** screen. Each user generates a signed QR code. Scan each other's — when both sides verify, the session is marked complete automatically.
+
+### 4. **Proof & Rating**
+For TOKEN/HYBRID swaps, submit a **proof of completion** (description + actual duration) before finalising. Then rate the mentor:
+
+| Rating | Tokens to Mentor | Tokens Held in Escrow |
+|--------|------------------|-----------------------|
+| ⭐⭐⭐⭐⭐ | 100% | 0% |
+| ⭐⭐⭐⭐ | 75% | 25% (7-day hold) |
+| ⭐⭐⭐ | 50% | 50% (7-day hold) |
+| ⭐⭐ or below | 25% | 75% (7-day hold) |
+
+Held tokens auto-release to the mentor after 7 days if no dispute is raised.
+
+### 5. **Finalize & Review**
+The **Trust Ledger** records every transaction using SHA-256 hash chaining. Both parties' Trust Scores update automatically. Generate a verified **Skill Passport PDF** from the Vault.
 
 ---
 
 ## 💎 The Hybrid Economy (Tokenomics)
 
-KnowItAll doesn't just rely on direct bartering. We use a dual-currency approach to solve the "double coincidence of wants":
+KnowItAll uses a dual-currency approach to solve the "double coincidence of wants":
 
-- **Direct Barter (1:1)**: You have what I want, and I have what you want. We swap directly!
-- **SkillTokens**: 
-  - **Earn**: By teaching a skill to someone who might not have a skill you want.
-  - **Spend**: Use earned tokens to "buy" lessons from any mentor on the platform.
-  - **Escrow**: Tokens are held safely by the platform during an active swap and released only upon successful verification.
+- **Direct Barter (1:1)**: You have what I want, I have what you want. We swap directly — verified via QR handshake.
+- **SkillTokens**:
+  - **Earn**: By teaching skills, with tokens released based on learner rating.
+  - **Spend**: Use earned tokens to buy lessons from any mentor.
+  - **Escrow**: Tokens are locked when a swap is accepted and released only after rating — protecting both parties.
+  - **Partial Hold**: Low ratings hold a portion of tokens in escrow for 7 days, giving learners a dispute window.
 
 ---
 
 ## 🔒 Trust & Security (The Ledger)
 
-We take trust seriously. Every single trade on KnowItAll is backed by a **Blockchain-Inspired Trust Ledger**.
+Every trade on KnowItAll is backed by a **Blockchain-Inspired Trust Ledger**:
 
-- **SHA-256 Hashing**: Every transaction is cryptographically hashed. Each new block contains the hash of the previous one, making the history tamper-proof.
-- **Dual Verification**: Trades only finalize when both parties "handshake" via QR or Video.
-- **Trust Score**: A dynamic score based on transaction history, endorsements, and successful swaps. High scores unlock better "Skill Passport" ratings.
+- **SHA-256 Hashing**: Each transaction is cryptographically hashed with the previous hash included, making history tamper-proof.
+- **Dual Verification**: Trades only finalise when both parties complete the QR handshake or video session.
+- **Proof of Completion**: For online sessions, users must submit a written description of what was covered and the actual session duration before tokens are released.
+- **Trust Score**: A dynamic score based on ratings, endorsements, and swap history. High scores unlock better Skill Passport ratings.
 
 ---
 
 ## 📜 The Skill Passport
 
-Your profile isn't just a bio—it's a **Skill Passport**.
+Your profile is a **Skill Passport**:
 - **Micro-credentials**: Every skill you learn or teach is recorded.
-- **Verified History**: Unlike a regular resume, your Skill Passport is backed by real transaction hashes on the ledger.
-- **PDF Export**: Generate an official, verified PDF of your skills and trust score to use for job applications or your professional portfolio.
+- **Verified History**: Backed by real transaction hashes from the Trust Ledger.
+- **PDF Export**: Generate an official verified PDF for job applications or your professional portfolio — directly from the Vault screen.
 
 ---
 
 ## 📱 App Walkthrough
 
-- **Login/Register**: Secure JWT-based authentication.
-- **Skill Radar**: An interactive map showing users near you.
-- **Trade Center**: Manage your active swaps, pending requests, and trade history.
-- **The Vault**: View your SkillToken balance and detailed trust ledger entries.
-- **Profile**: Customize your offered skills and view your digital Skill Passport.
+### Feed (Home)
+The default screen after login. Shows:
+- 🆕 **New Skills** added by nearby users
+- 🤝 **Completed Swaps** from the community (social proof)
+- ⭐ **Top Mentors** ranked by trust score with a Connect button
+- 🔥 **Trending Categories** (Digital, Physical, Hybrid) with skill counts
+
+### Skill Radar
+Interactive map (OpenStreetMap — no API key needed) showing nearby mentors as initials pins. Green dot = online. Tap a pin → view profile → Connect & Request Swap.
+
+### Trade Center
+Manage all swaps. Tabs: **Active** and **History**.
+
+Active swap cards show role-aware actions:
+- **Mentor** on REQUESTED swap: Accept / Decline
+- **Learner** on REQUESTED swap: Cancel
+- **Both** on ACTIVE swap: Chat · Video Call (TOKEN/HYBRID) or QR Verify (BARTER) · Mark Session Done · Cancel
+- **Completed** swap (learner): Rate & Release Tokens
+
+### The Vault
+- SkillToken balance (large editorial display)
+- Trust score, completed swap count, average rating
+- Full Trust Ledger timeline with hash preview
+- Generate Skill Passport PDF
+
+### Skill Profile
+- Profile header with initials avatar
+- All your skills with category colour coding, proficiency, token value, endorsements
+- Add / delete skills
+- **Set Availability** — manage your teaching schedule
 
 ---
 
-## 🏗 System Architecture (UML)
+## 🗓 Availability Calendar
+
+Mentors set when they're available to teach. Two slot types:
+
+- **Recurring**: Repeats every week on the same day and time (e.g. every Monday 6–8 PM)
+- **One-off**: A specific date and time, once only (e.g. 15 June 3–5 PM)
+
+**Mentor flow**: Skill Profile → Set Availability → Add Recurring or One-off slot → pick day/date, start time, duration.
+
+**Learner flow**: When requesting a TOKEN or HYBRID swap, a slot picker shows the mentor's available slots. Select one to book it. If the mentor hasn't set availability, you can still send the request and coordinate via chat.
+
+Slots are automatically marked **Booked** when a swap is accepted and released back to **Available** if the swap is cancelled.
+
+---
+
+## 🔔 Push Notifications
+
+Real-time notifications using **Firebase Cloud Messaging (FCM)**:
+
+| Event | Recipient |
+|-------|-----------|
+| New swap request received | Mentor |
+| Swap request accepted | Learner |
+| New chat message | Counterpart |
+| Tokens released from escrow | Mentor |
+| Swap cancelled | Counterpart |
+| Session marked complete | Both |
+
+FCM tokens are saved to Firestore on login and refreshed automatically by `KnowItAllMessagingService`. Notifications deep-link directly to the relevant screen.
+
+---
+
+## 📡 Skill Feed & Discovery
+
+A scrollable discovery feed (5th tab in bottom nav) that drives daily engagement:
+
+- **New Skills**: Cards showing recently added skills from nearby users, with their trust score and category colour coding.
+- **Completed Swaps**: Community activity showing who taught what, with star ratings.
+- **Top Mentors**: Highlighted mentor cards with trust score, swap count, and a direct Connect button.
+- **Trending Categories**: Horizontal chip strip showing which skill categories have the most activity (Digital / Physical / Hybrid).
+
+Feed items are interleaved across types so the feed never shows all of one kind at once.
+
+---
+
+## 🏗 System Architecture
 
 ### High-Level Component Diagram
-Understand how the Android app communicates with our Spring Boot backend.
 
 ```mermaid
 graph TD
     subgraph "Mobile Client (Android)"
         UI[Jetpack Compose UI]
         VM[ViewModels]
-        Repo[Repositories]
-        LocalDB[(Room Database)]
-        Retrofit[Retrofit API Client]
+        Repo[Firebase Repositories]
+        Auth[Firebase Auth]
+        FCM[Firebase Messaging]
     end
 
-    subgraph "Backend (Spring Boot)"
-        API[REST Controllers]
-        Service[Business Logic]
-        DBRepo[Spring Data Repositories]
-        PostgreSQL[(PostgreSQL)]
+    subgraph "Firebase Backend"
+        FS[(Firestore)]
+        FA[Firebase Auth]
+        FFCM[Firebase Cloud Messaging]
     end
 
     UI --> VM
     VM --> Repo
-    Repo --> LocalDB
-    Repo --> Retrofit
-    Retrofit <==> API
-    API --> Service
-    Service --> DBRepo
-    DBRepo --> PostgreSQL
+    Repo --> FS
+    Repo --> FA
+    FCM --> FFCM
+    Auth --> FA
 ```
 
-### Core Data Entities (ER Diagram)
-The backbone of our data management system.
+### Core Data Collections (Firestore)
 
 ```mermaid
 erDiagram
-    USER ||--o{ SKILL : "possesses"
-    USER ||--o{ SWAP : "initiates"
-    USER ||--o{ TRUST_LEDGER : "recorded_in"
-    SKILL ||--o{ SWAP : "traded_in"
-    SWAP ||--|| TRUST_LEDGER : "finalized_as"
+    USERS ||--o{ SKILLS : "possesses"
+    USERS ||--o{ SWAPS : "initiates"
+    USERS ||--o{ TRUST_LEDGER : "recorded_in"
+    USERS ||--o{ AVAILABILITY : "sets"
+    SKILLS ||--o{ SWAPS : "traded_in"
+    SWAPS ||--|| TRUST_LEDGER : "finalized_as"
+    SWAPS ||--o{ CHAT_MESSAGES : "has"
+    SWAPS ||--|| TOKEN_ESCROW : "locks_tokens_in"
 
-    USER {
-        string uid PK "Unique User ID"
-        string name "Full Name"
-        string email "Email Address"
-        double latitude "GPS Latitude"
-        double longitude "GPS Longitude"
-        long skillTokenBalance "Available Tokens"
-        float trustScore "Global Trust Rating"
+    USERS {
+        string uid PK
+        string name
+        string email
+        double latitude
+        double longitude
+        long skillTokenBalance
+        float trustScore
+        bool isOnline
+        string fcmToken
     }
 
-    SKILL {
-        int skillId PK "Internal ID"
-        string userId FK "Owner ID"
-        string skillName "e.g., Python, Carpentry"
-        string category "DIGITAL | PHYSICAL | HYBRID"
-        string proficiency "BEGINNER | INTERMEDIATE | ADVANCED | EXPERT"
+    SKILLS {
+        string skillId PK
+        string userId FK
+        string skillName
+        string category
+        string proficiencyLevel
+        int tokenValue
+        int endorsements
     }
 
-    SWAP {
-        string swapId PK "Transaction ID"
-        string mentorId FK "Teacher ID"
-        string learnerId FK "Student ID"
-        string swapType "BARTER | TOKEN | HYBRID"
-        string status "REQUESTED | ACTIVE | COMPLETED | CANCELLED"
-        long tokenAmount "Tokens involved (if any)"
+    SWAPS {
+        string swapId PK
+        string mentorId FK
+        string learnerId FK
+        string swapType
+        string status
+        long tokenAmount
+        long tokensInEscrow
+        int totalSessions
+        int completedSessions
+        int durationMinutes
+        string proofDescription
+        float rating
     }
 
     TRUST_LEDGER {
-        string transactionId PK "Ledger Entry ID"
-        string swapId FK "Related Swap ID"
-        string userId FK "Participant ID"
-        string previousHash "Hash of last entry"
-        string currentHash "SHA-256 of this entry"
-        string transactionData "Encrypted session details"
+        string transactionId PK
+        string swapId FK
+        string mentorId FK
+        string learnerId FK
+        string previousHash
+        string currentHash
+        int ratingGiven
+        string ratingComment
+    }
+
+    TOKEN_ESCROW {
+        string swapId PK
+        long totalTokens
+        long heldAmount
+        string status
+        long autoReleaseAt
+    }
+
+    AVAILABILITY {
+        string slotId PK
+        string userId FK
+        string slotType
+        string dayOfWeek
+        long specificDate
+        int startHour
+        int startMinute
+        int durationMinutes
+        string status
+    }
+
+    CHAT_MESSAGES {
+        string messageId PK
+        string swapId FK
+        string senderId FK
+        string text
+        long timestamp
     }
 ```
 
@@ -174,52 +302,84 @@ erDiagram
 
 ## 🛠 Tech Stack
 
-- **Mobile (Frontend)**: 
-  - Jetpack Compose (Modern UI)
-  - Room DB (Offline first)
-  - Retrofit (Networking)
-  - Fused Location API (GPS Radar)
-- **Backend**: 
-  - Spring Boot 3 (Java 17)
-  - Spring Security + JWT (Auth)
-  - PostgreSQL (Persistent storage)
-- **Security & Utilities**:
-  - SHA-256 (Hashing)
-  - iText 7 (PDF Generation)
-  - ZXing (QR Code Handshake)
+### Mobile (Android)
+| Layer | Technology |
+|-------|-----------|
+| UI | Jetpack Compose + Material 3 |
+| Architecture | MVVM + Clean Architecture |
+| Navigation | Jetpack Navigation Compose |
+| Maps | OSMDroid (free, no API key) |
+| Video Calls | Jitsi Meet (free, opens browser) |
+| QR Codes | ZXing |
+| PDF Generation | iText 7 |
+
+### Backend (Firebase — fully serverless)
+| Service | Usage |
+|---------|-------|
+| Firebase Auth | User registration, login, session management |
+| Firestore | All data storage, real-time sync |
+| Firebase Cloud Messaging | Push notifications |
+
+### Security & Utilities
+| Tool | Usage |
+|------|-------|
+| SHA-256 | Trust ledger hash chaining |
+| AES-GCM | Token escrow integrity |
+| FCM HTTP v1 API | Client-side push notifications |
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- **Android**: Android Studio Jellyfish+, SDK 24+.
-- **Backend**: Java 17+, Maven 3.8+, PostgreSQL.
+- Android Studio Ladybug or later
+- Android SDK 26+
+- A Firebase project with Auth and Firestore enabled
 
 ### Installation
-1. **Clone the Repo**:
-   ```bash
-   git clone https://github.com/your-repo/KnowItAll.git
-   ```
-2. **Setup Backend**:
-   - Configure `application.yml` with your PostgreSQL credentials.
-   - Run `mvn spring-boot:run`.
-3. **Setup Android**:
-   - Update `BASE_URL` in `RetrofitClient.kt` to point to your server IP.
-   - Build and run the app.
+
+1. **Clone the repo**:
+```bash
+git clone https://github.com/kunal-gangani/Knows-It-All.git
+```
+
+2. **Firebase setup**:
+   - Create a project at [console.firebase.google.com](https://console.firebase.google.com)
+   - Enable **Authentication** (Email/Password)
+   - Enable **Firestore Database** (start in test mode)
+   - Enable **Cloud Messaging**
+   - Download `google-services.json` and place it at `app/google-services.json`
+
+3. **Build and run**:
+```bash
+./gradlew installDebug
+```
+
+### Firestore Indexes Required
+The app needs one composite index for the nearby users query. When you first open the Radar screen, Firestore will show an error with a direct link to create the index. Click it and wait ~2 minutes.
 
 ---
 
 ## ❓ FAQ
 
 **Q: Is it free to use?**
-A: Yes! You can trade skills directly via barter without ever using tokens.
+A: Yes. Barter trades require no tokens. Tokens are earned by teaching.
 
 **Q: What if someone scams me?**
-A: Our Trust Ledger and SHA-256 hashing ensure all trades are recorded. If a session is disputed, our support team uses the ledger history to resolve it. Always use the QR Handshake or Video Call verification to protect your tokens.
+A: The Trust Ledger records every trade with SHA-256 hashing. For TOKEN swaps, tokens are held in escrow until both parties complete the session and rate each other. Low ratings hold a portion of tokens in escrow for 7 days as a dispute window.
+
+**Q: What happens to held escrow tokens after 7 days?**
+A: They auto-release to the mentor if no dispute is raised within the window.
 
 **Q: Why 5km radius?**
-A: We focus on building real-world communities. 5km is the perfect distance for in-person trades while still offering a wide variety of skills.
+A: We focus on building real-world local communities. 5km is ideal for in-person trades while offering a wide variety of skills.
+
+**Q: Do I need a Google Maps API key?**
+A: No. The Radar screen uses OpenStreetMap via OSMDroid — completely free with no API key or billing required.
+
+**Q: How do video calls work?**
+A: Tapping **Video Call** on an active swap opens a Jitsi Meet room unique to that swap. Both users tap the same button and land in the same room. No account or app install needed — works in the browser.
 
 ---
-© 2024 KnowItAll - Empowering Peer-to-Peer Learning.
+
+© 2025 KnowItAll — Empowering Peer-to-Peer Learning.

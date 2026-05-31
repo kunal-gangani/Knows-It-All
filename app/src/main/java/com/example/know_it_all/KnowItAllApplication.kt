@@ -6,6 +6,8 @@ import com.example.know_it_all.data.repository.FirebaseSkillRepository
 import com.example.know_it_all.data.repository.FirebaseSwapRepository
 import com.example.know_it_all.data.repository.FirebaseUserRepository
 import com.example.know_it_all.data.repository.FirebaseChatRepository
+import com.example.know_it_all.data.repository.AvailabilityRepository
+import com.example.know_it_all.data.repository.FeedRepository
 import com.example.know_it_all.util.SessionManager
 import com.google.firebase.FirebaseApp
 
@@ -37,6 +39,10 @@ class KnowItAllApplication : Application() {
 
     val feedRepository: FeedRepository by lazy { 
         FeedRepository() 
+    }
+
+    val availabilityRepository: AvailabilityRepository by lazy {
+        AvailabilityRepository()
     }
 
     override fun onCreate() {

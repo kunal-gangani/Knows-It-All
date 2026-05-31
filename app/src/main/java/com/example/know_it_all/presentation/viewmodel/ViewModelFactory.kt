@@ -8,6 +8,8 @@ import com.example.know_it_all.data.repository.FirebaseSkillRepository
 import com.example.know_it_all.data.repository.FirebaseSwapRepository
 import com.example.know_it_all.data.repository.FirebaseUserRepository
 import com.example.know_it_all.data.repository.FirebaseChatRepository
+import com.example.know_it_all.data.repository.AvailabilityRepository
+import com.example.know_it_all.data.repository.FeedRepository
 import com.example.know_it_all.util.SessionManager
 
 class ViewModelFactory(
@@ -16,8 +18,9 @@ class ViewModelFactory(
     private val swapRepository: FirebaseSwapRepository? = null,
     private val ledgerRepository: FirebaseLedgerRepository? = null,
     private val sessionManager: SessionManager? = null,
-    private val chatRepository: FirebaseChatRepository? = null
-    private val feedRepository: FeedRepository? = null
+    private val chatRepository: FirebaseChatRepository? = null,
+    private val feedRepository: FeedRepository? = null,
+    private val availabilityRepository: AvailabilityRepository? = null
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -40,7 +43,7 @@ class ViewModelFactory(
                     feedRepository = requireNotNull(feedRepository),
                     sessionManager = requireNotNull(sessionManager)
                 ) as T
-        }
+            }
             modelClass.isAssignableFrom(TradeViewModel::class.java) -> {
                 TradeViewModel(
                     swapRepository = requireNotNull(swapRepository),
@@ -57,15 +60,19 @@ class ViewModelFactory(
             }
             modelClass.isAssignableFrom(ChatViewModel::class.java) -> {
                 ChatViewModel(
-                    chatRepository = requireNotNull(chatRepository) {
-                    "chatRepository required for ChatViewModel"
-                }
+                    chatRepository = requireNotNull(chatRepository)
                 ) as T
             }
             modelClass.isAssignableFrom(SkillViewModel::class.java) -> {
                 SkillViewModel(
                     skillRepository = requireNotNull(skillRepository),
                     sessionManager  = requireNotNull(sessionManager)
+                ) as T
+            }
+            modelClass.isAssignableFrom(AvailabilityViewModel::class.java) -> {
+                AvailabilityViewModel(
+                    availabilityRepository = requireNotNull(availabilityRepository),
+                    sessionManager = requireNotNull(sessionManager)
                 ) as T
             }
             else -> throw IllegalArgumentException("Unknown ViewModel: ${modelClass.name}")

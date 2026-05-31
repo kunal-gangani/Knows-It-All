@@ -66,6 +66,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavHostController
 import com.example.know_it_all.data.model.Skill
 import com.example.know_it_all.data.model.SwapType
+import com.example.know_it_all.data.model.TimeSlot
 import com.example.know_it_all.data.model.User
 import com.example.know_it_all.data.model.dto.SwapRequestBody
 import com.example.know_it_all.data.repository.FirebaseSkillRepository
@@ -331,9 +332,8 @@ private fun RequestSwapSheet(
     var totalSessions    by remember { mutableIntStateOf(1) }
     var durationMinutes  by remember { mutableIntStateOf(60) }
     var showSessionSetup by remember { mutableStateOf(false) }
-    var totalSessions    by remember { mutableIntStateOf(1) }
-    var durationMinutes  by remember { mutableIntStateOf(60) }
-    var showSessionSetup by remember { mutableStateOf(false) }
+    var showSlotPicker   by remember { mutableStateOf(false) }
+    var selectedSlot     by remember { mutableStateOf<TimeSlot?>(null) }
 
     LaunchedEffect(Unit) {
         isLoading = true
@@ -540,6 +540,37 @@ private fun RequestSwapSheet(
                         }
                     }
                 }
+
+                // Slot picker for TOKEN or HYBRID
+                Column {
+                    SectionLabel("Select a Time Slot")
+                    selectedSlot?.let { slot ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(AcidGreen.copy(alpha = 0.15f), RoundedCornerShape(10.dp))
+                                .padding(12.dp)
+                        ) {
+                            Text(
+                                "📅 ${slot.displayLabel}",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = NearBlack
+                            )
+                        }
+                    }
+                    Button(
+                        onClick = { showSlotPicker = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(CreamDark, NearBlack)
+                    ) {
+                        Text(
+                            if (selectedSlot != null) "Change slot" else "Pick a time slot",
+                            fontSize = 13.sp
+                        )
+                    }
+                }
             }
 
             error?.let {
@@ -638,6 +669,24 @@ private fun RequestSwapSheet(
                     showSessionSetup = false
                 },
                 onDismiss = { showSessionSetup = false }
+            )
+        }
+    }
+
+    // Slot picker for mentors' availability
+    if (showSlotPicker) {
+        androidx.compose.material3.ModalBottomSheet(
+            onDismissRequest = { showSlotPicker = false },
+            containerColor = Cream
+        ) {
+            SlotPickerSheet(
+                mentorUserId = mentor.uid,
+                mentorName = mentor.name,
+                onSlotSelected = { slot ->
+                    selectedSlot = slot
+                    showSlotPicker = false
+                },
+                onDismiss = { showSlotPicker = false }
             )
         }
     }
