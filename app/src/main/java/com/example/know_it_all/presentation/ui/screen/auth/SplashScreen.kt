@@ -48,18 +48,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.compose.ui.platform.LocalContext
 import com.example.know_it_all.presentation.ui.navigation.Screen
 import kotlinx.coroutines.delay
 
-/**
- * Fixes applied:
- *  1. No longer reads isLoggedIn synchronously — receives it as a parameter
- *     from NavGraph which observes AuthViewModel.uiState reactively.
- *  2. LoadingDots replaced with a pulsing acid-green dot matching the
- *     design reference's online presence indicator.
- *  3. Typography and colors aligned to KnowItAllTheme.
- *  4. Logo uses the editorial heavy/thin weight contrast from the reference.
- */
+
 @Composable
 fun SplashScreen(
     navController: NavHostController,
@@ -84,6 +77,7 @@ fun SplashScreen(
         label = "text_alpha"
     )
 
+    val context = LocalContext.current
     LaunchedEffect(Unit) {
         delay(100)
         logoVisible = true
@@ -91,10 +85,18 @@ fun SplashScreen(
         textVisible = true
         delay(1800)
         if (isLoggedIn) {
-            navController.navigate(Screen.Feed.route) {
-                popUpTo(Screen.Splash.route) { inclusive = true }
+            val prefs = context.getSharedPreferences("KnowItAllPrefs", 0)
+            val onboardingDone = prefs.getBoolean("onboarding_complete", false)
+            if (onboardingDone) {
+                navController.navigate(Screen.Feed.route) {
+                    popUpTo(Screen.Splash.route) { inclusive = true }
+                }
+            }else {
+                navController.navigate(Screen.Onboarding.route) {
+                    popUpTo(Screen.Splash.route) { inclusive = true }
+                }
             }
-        } else {
+        }else {
             navController.navigate(Screen.Login.route) {
                 popUpTo(Screen.Splash.route) { inclusive = true }
             }

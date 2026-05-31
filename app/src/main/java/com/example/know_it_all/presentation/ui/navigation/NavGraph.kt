@@ -23,6 +23,7 @@ import com.example.know_it_all.presentation.ui.screen.main.RadarScreenEnhanced
 import com.example.know_it_all.presentation.ui.screen.main.SkillProfileScreenEnhanced
 import com.example.know_it_all.presentation.ui.screen.main.TradeScreenEnhanced
 import com.example.know_it_all.presentation.ui.screen.main.VaultScreenEnhanced
+import com.example.know_it_all.presentation.ui.screen.onboarding.OnboardingScreen
 import com.example.know_it_all.presentation.viewmodel.AuthViewModel
 import com.example.know_it_all.presentation.viewmodel.ChatViewModel
 import com.example.know_it_all.presentation.viewmodel.FeedViewModel
@@ -31,6 +32,7 @@ import com.example.know_it_all.presentation.viewmodel.RadarViewModel
 import com.example.know_it_all.presentation.viewmodel.SkillViewModel
 import com.example.know_it_all.presentation.viewmodel.TradeViewModel
 import com.example.know_it_all.presentation.viewmodel.ViewModelFactory
+
 
 sealed class Screen(val route: String) {
     object Splash       : Screen("splash")
@@ -43,6 +45,7 @@ sealed class Screen(val route: String) {
     object SkillProfile : Screen("skill_profile")
     object Chat         : Screen("chat/{swapId}/{skillName}/{counterpartName}")
     object QRHandshake  : Screen("qr_handshake/{swapId}/{skillName}")
+    object Onboarding : Screen("onboarding")
 }
 
 @Composable
@@ -243,6 +246,16 @@ fun KnowItAllNavigation(
                 swapId         = backStackEntry.arguments?.getString("swapId") ?: "",
                 currentUserId  = authState.userId ?: "",
                 skillName      = backStackEntry.arguments?.getString("skillName") ?: ""
+            )
+        }
+
+        // ── Onboarding ────────────────────────────────────────────────────────
+        composable(Screen.Onboarding.route) {
+            OnboardingScreen(
+                navController = navController,
+                authViewModel = authViewModel,
+                userId   = authState.userId ?: "",
+                userName = authState.userName ?: ""
             )
         }
     }

@@ -10,25 +10,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-/**
- * Fixes applied:
- *  1. token removed from AuthUiState entirely — tokens must never live in
- *     observable state. StateFlow can be collected by any subscriber in the
- *     composition tree; exposing the JWT there is a security exposure.
- *     Token lives only in SessionManager (SharedPreferences).
- *  2. userName added — login was saving "" for name; now correctly persisted.
- *  3. uiState exposed via asStateFlow() — prevents external callers from
- *     casting back to MutableStateFlow and writing state they don't own.
- *  4. clearError() added — screens must be able to clear consumed errors
- *     after showing a Snackbar, otherwise errors re-show on recomposition.
- *  5. login now saves authData.name (not empty string) to session.
- */
 data class AuthUiState(
     val isLoading: Boolean = false,
     val isAuthenticated: Boolean = false,
     val userId: String? = null,
-    val userName: String? = null,           // ✅ name tracked, token is NOT
-    val error: String? = null
+    val userName: String? = null,           
+    val error: String? = null,
+    val needsOnboarding: Boolean = false
 )
 
 class AuthViewModel(
@@ -61,7 +49,8 @@ class AuthViewModel(
                     _uiState.value = AuthUiState(
                         isAuthenticated = true,
                         userId = authData.userId,
-                        userName = name
+                        userName = name,
+                        needsOnboarding = true
                     )
                 },
                 onFailure = { error ->
