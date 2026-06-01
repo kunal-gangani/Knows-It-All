@@ -46,6 +46,7 @@ sealed class Screen(val route: String) {
     object Chat         : Screen("chat/{swapId}/{skillName}/{counterpartName}")
     object QRHandshake  : Screen("qr_handshake/{swapId}/{skillName}")
     object Onboarding : Screen("onboarding")
+    object Leaderboard : Screen("leaderboard")
 }
 
 @Composable
@@ -256,6 +257,23 @@ fun KnowItAllNavigation(
                 authViewModel = authViewModel,
                 userId   = authState.userId ?: "",
                 userName = authState.userName ?: ""
+            )
+        }
+
+        // ── Leaderboard ────────────────────────────────────────────────────────
+        composable(Screen.Leaderboard.route) { backStackEntry ->
+            val leaderboardViewModel: LeaderboardViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = ViewModelFactory(
+                    leaderboardRepository = app.leaderboardRepository,
+                    sessionManager        = app.sessionManager
+                )
+            )
+            LeaderboardScreen(
+                navController         = navController,
+                leaderboardViewModel  = leaderboardViewModel,
+                currentLat            = 0.0, 
+                currentLon            = 0.0
             )
         }
     }

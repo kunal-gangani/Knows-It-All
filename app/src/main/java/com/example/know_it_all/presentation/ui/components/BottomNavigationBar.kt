@@ -53,7 +53,8 @@ fun BottomNavigationBar(
         BottomNavItem("Radar",   "radar",         Icons.Default.LocationOn),
         BottomNavItem("Trade",   "trade",         Icons.Default.SwapHoriz),
         BottomNavItem("Vault",   "vault",         Icons.Default.Wallet),
-        BottomNavItem("Profile", "skill_profile", Icons.Default.Person)
+        BottomNavItem("Profile", "skill_profile", Icons.Default.Person),
+        BottomNavItem("Ranks", "leaderboard", Icons.Default.Leaderboard)
     )
 
     Box(

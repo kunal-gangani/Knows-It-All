@@ -45,6 +45,10 @@ class KnowItAllApplication : Application() {
         AvailabilityRepository()
     }
 
+    val leaderboardRepository: LeaderboardRepository by lazy {
+        LeaderboardRepository()
+    }
+
     override fun onCreate() {
         super.onCreate()
         FirebaseApp.initializeApp(this)

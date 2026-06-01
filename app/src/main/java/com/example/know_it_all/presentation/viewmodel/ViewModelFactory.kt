@@ -20,7 +20,8 @@ class ViewModelFactory(
     private val sessionManager: SessionManager? = null,
     private val chatRepository: FirebaseChatRepository? = null,
     private val feedRepository: FeedRepository? = null,
-    private val availabilityRepository: AvailabilityRepository? = null
+    private val availabilityRepository: AvailabilityRepository? = null,
+    private val leaderboardRepository: LeaderboardRepository? = null
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -67,6 +68,12 @@ class ViewModelFactory(
                 SkillViewModel(
                     skillRepository = requireNotNull(skillRepository),
                     sessionManager  = requireNotNull(sessionManager)
+                ) as T
+            }
+            modelClass.isAssignableFrom(LeaderboardViewModel::class.java) -> {
+                LeaderboardViewModel(
+                    leaderboardRepository = requireNotNull(leaderboardRepository),
+                    sessionManager        = requireNotNull(sessionManager)
                 ) as T
             }
             modelClass.isAssignableFrom(AvailabilityViewModel::class.java) -> {
